@@ -10,7 +10,7 @@ import SwiftUI
 struct StudyRecordListView: View {
   @State private var viewModel = StudyRecordListViewModel()
   @State private var isShowingAddView = false
-  @State private var isShowingSettings = false
+
   @State private var selectedRecord: StudyRecordModel?
   @Namespace private var zoomNamespace
   @Namespace private var addNamespace
@@ -91,16 +91,6 @@ struct StudyRecordListView: View {
         }
         .navigationTitle(String(localized: "study_record_list_title"))
         .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-          ToolbarItem(placement: .topBarTrailing) {
-            Button {
-              isShowingSettings = true
-            } label: {
-              Image(systemName: "gearshape.fill")
-                .foregroundColor(.primary)
-            }
-          }
-        }
         .searchable(text: $viewModel.searchText, prompt: String(localized: "study_record_search_prompt"))
         .task {
           await viewModel.loadStudyRecords()
@@ -166,12 +156,11 @@ struct StudyRecordListView: View {
         }
         .navigationTransition(ZoomNavigationTransition.zoom(sourceID: "add-record", in: addNamespace))
       }
-      .sheet(isPresented: $isShowingSettings) {
-        SettingsView()
-      }
+
       .navigationDestination(item: $selectedRecord) { record in
         StudyRecordDetailView(record: record)
           .navigationTransition(.zoom(sourceID: "record-\(record.id)", in: zoomNamespace))
+          .toolbarVisibility(.hidden, for: .tabBar)
       }
     }
   }
@@ -229,10 +218,22 @@ private struct StudyRecordRow: View {
             .fontWeight(.medium)
             .foregroundColor(.secondary)
           
-          if record.hasAttachment {
-            Image(systemName: "paperclip")
-              .font(.caption)
-              .foregroundColor(.blue)
+          Text(record.formattedDuration)
+            .font(.caption2)
+            .foregroundColor(.orange)
+          
+          HStack(spacing: 4) {
+            if record.hasAttachment {
+              Image(systemName: "paperclip")
+                .font(.caption2)
+                .foregroundColor(.blue)
+            }
+            
+            if record.hasFeedback {
+              Image(systemName: "brain.head.profile")
+                .font(.caption2)
+                .foregroundColor(.pink)
+            }
           }
         }
       }

@@ -13,6 +13,7 @@ extension StudyRecord {
     self.identifier = UUID().uuidString
     self.title = input.title
     self.content = input.content
+    self.studyDuration = input.studyDuration
     self.createdTime = Date()
     self.updatedTime = Date()
     self.deletedTime = nil
@@ -38,6 +39,10 @@ extension StudyRecord {
     
     if let content = input.content {
       self.content = content
+    }
+    
+    if let studyDuration = input.studyDuration {
+      self.studyDuration = studyDuration
     }
     
     if let attachmentInputs = input.attachments {
@@ -127,6 +132,7 @@ extension StudyRecord {
       content: content ?? "",
       createdTime: createdTime ?? Date(),
       updatedTime: updatedTime ?? Date(),
+      studyDuration: studyDuration,
       attachments: attachmentModels,
       feedbacks: feedbackModels
     )

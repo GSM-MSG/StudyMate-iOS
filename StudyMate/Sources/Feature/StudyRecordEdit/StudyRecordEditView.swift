@@ -41,7 +41,7 @@ struct StudyRecordEditView: View {
               TextField(String(localized: "title_placeholder"), text: $viewModel.title)
                 .textFieldStyle(PlainTextFieldStyle())
                 .font(.body)
-                .padding(4)
+                .padding()
                 .background {
                   RoundedRectangle(cornerRadius: 8)
                     .fill(Color(UIColor.systemGray6))
@@ -66,11 +66,31 @@ struct StudyRecordEditView: View {
                 
                 if viewModel.content.isEmpty {
                   Text(String(localized: "content_placeholder"))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 12)
                     .allowsHitTesting(false)
                 }
+              }
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+              Text(String(localized: "study_duration"))
+                .font(.headline)
+                .fontWeight(.semibold)
+              
+              VStack(spacing: 8) {
+                Text(viewModel.formattedDuration)
+                  .font(.title3)
+                  .fontWeight(.medium)
+                  .foregroundColor(.primary)
+                
+                TimePicker(duration: $viewModel.studyDuration)
+              }
+              .padding()
+              .background {
+                RoundedRectangle(cornerRadius: 8)
+                  .fill(Color(UIColor.systemGray6))
               }
             }
             

@@ -8,8 +8,29 @@
 import SwiftUI
 
 struct ContentView: View {
+  @State private var tabCoordinator = TabCoordinator()
+  
   var body: some View {
-    StudyRecordListView()
+    TabView(selection: $tabCoordinator.selectedTab) {
+      Tab(value: StudyMateTab.dashboard) {
+        DashboardView()
+      } label: {
+        Label(StudyMateTab.dashboard.title, systemImage: StudyMateTab.dashboard.systemImage)
+      }
+      
+      Tab(value: StudyMateTab.studyRecordList) {
+        StudyRecordListView()
+      } label: {
+        Label(StudyMateTab.studyRecordList.title, systemImage: StudyMateTab.studyRecordList.systemImage)
+      }
+      
+      Tab(value: StudyMateTab.settings) {
+        SettingsView()
+      } label: {
+        Label(StudyMateTab.settings.title, systemImage: StudyMateTab.settings.systemImage)
+      }
+    }
+    .environment(tabCoordinator)
   }
 }
 

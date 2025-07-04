@@ -95,6 +95,8 @@ struct StudyContentTabView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
+        StudyInfoCard(record: record)
+        
         StudyContentCard(content: record.content)
         
         if record.hasAttachment {
@@ -105,6 +107,74 @@ struct StudyContentTabView: View {
       }
       .padding(20)
     }
+  }
+}
+
+struct StudyInfoCard: View {
+  let record: StudyRecordModel
+  
+  var body: some View {
+    VStack(alignment: .leading, spacing: 16) {
+      HStack(spacing: 8) {
+        Image(systemName: "info.circle.fill")
+          .font(.title3)
+          .foregroundColor(.green)
+        
+        Text(String(localized: "study_info"))
+          .font(.headline)
+          .fontWeight(.semibold)
+          .foregroundColor(.primary)
+      }
+      
+      VStack(spacing: 12) {
+        HStack {
+          HStack(spacing: 6) {
+            Image(systemName: "clock.fill")
+              .font(.caption)
+              .foregroundColor(.orange)
+            Text(String(localized: "study_duration"))
+              .font(.subheadline)
+              .foregroundColor(.secondary)
+          }
+          
+          Spacer()
+          
+          Text(record.formattedDuration)
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundColor(.primary)
+        }
+        
+        HStack {
+          HStack(spacing: 6) {
+            Image(systemName: "calendar")
+              .font(.caption)
+              .foregroundColor(.blue)
+            Text(String(localized: "creation_date"))
+              .font(.subheadline)
+              .foregroundColor(.secondary)
+          }
+          
+          Spacer()
+          
+          Text(record.createdTime.formatted(.dateTime.year().month().day().hour().minute()))
+            .font(.subheadline)
+            .fontWeight(.medium)
+            .foregroundColor(.primary)
+        }
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(20)
+    .background(
+      RoundedRectangle(cornerRadius: 16)
+        .fill(Color(.systemBackground))
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .overlay(
+          RoundedRectangle(cornerRadius: 16)
+            .stroke(Color(.systemGray5), lineWidth: 1)
+        )
+    )
   }
 }
 
@@ -407,9 +477,10 @@ struct AIFeedbackCard: View {
     StudyRecordDetailView(record: StudyRecordModel(
       id: "sample",
       title: "Swift Basic Syntax Summary",
-    content: "Summarized the differences between variables and constants. `var` is a variable, `let` is a constant...",
+      content: "Summarized the differences between variables and constants. `var` is a variable, `let` is a constant...",
       createdTime: Date(),
       updatedTime: Date(),
+      studyDuration: 1800, // 30분
       attachments: [],
       feedbacks: []
     ))

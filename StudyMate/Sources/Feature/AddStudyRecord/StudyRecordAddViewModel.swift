@@ -7,6 +7,7 @@ import UIKit
 final class StudyRecordAddViewModel {
   var title = ""
   var content = ""
+  var studyDuration: TimeInterval = 30 * 60 // 기본값 30분
   var attachments: [AttachmentItem] = []
   private(set) var isLoading = false
   private(set) var errorMessage: String?
@@ -18,6 +19,19 @@ final class StudyRecordAddViewModel {
   
   var hasAttachment: Bool {
     !attachments.isEmpty
+  }
+  
+  var formattedDuration: String {
+    let formatter = DateComponentsFormatter()
+    formatter.allowedUnits = [.hour, .minute]
+    formatter.unitsStyle = .abbreviated
+    formatter.zeroFormattingBehavior = .dropAll
+    
+    if studyDuration < 60 {
+      return String(localized: "less_than_minute")
+    }
+    
+    return formatter.string(from: studyDuration) ?? String(localized: "unknown_duration")
   }
   
   private let studyRecordInteractor: StudyRecordInteractor
@@ -48,6 +62,7 @@ final class StudyRecordAddViewModel {
       let input = StudyRecordCreateInput(
         title: title.trimmingCharacters(in: .whitespacesAndNewlines),
         content: content.trimmingCharacters(in: .whitespacesAndNewlines),
+        studyDuration: studyDuration,
         attachments: attachmentInputs
       )
       
@@ -90,6 +105,7 @@ final class StudyRecordAddViewModel {
   private func resetForm() {
     title = ""
     content = ""
+    studyDuration = 30 * 60 // 30분으로 리셋
     attachments = []
   }
 }

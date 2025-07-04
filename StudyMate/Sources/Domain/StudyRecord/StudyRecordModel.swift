@@ -8,6 +8,7 @@ struct StudyRecordModel: Identifiable, Hashable {
   let content: String
   let createdTime: Date
   let updatedTime: Date
+  let studyDuration: TimeInterval // 초 단위
   let attachments: [AttachmentModel]
   let feedbacks: [StudyFeedbackModel]
   
@@ -23,12 +24,27 @@ struct StudyRecordModel: Identifiable, Hashable {
     createdTime.formatted(.dateTime.month().day())
   }
   
-  init(id: String, title: String, content: String, createdTime: Date, updatedTime: Date, attachments: [AttachmentModel], feedbacks: [StudyFeedbackModel] = []) {
+  var formattedDuration: String {
+    let formatter = DateComponentsFormatter()
+    formatter.allowedUnits = [.hour, .minute]
+    formatter.unitsStyle = .abbreviated
+    formatter.zeroFormattingBehavior = .dropAll
+    
+    if studyDuration < 60 {
+      // 1분 미만인 경우 "1분 미만"으로 표시
+      return String(localized: "less_than_minute")
+    }
+    
+    return formatter.string(from: studyDuration) ?? String(localized: "unknown_duration")
+  }
+  
+  init(id: String, title: String, content: String, createdTime: Date, updatedTime: Date, studyDuration: TimeInterval = 0, attachments: [AttachmentModel], feedbacks: [StudyFeedbackModel] = []) {
     self.id = id
     self.title = title
     self.content = content
     self.createdTime = createdTime
     self.updatedTime = updatedTime
+    self.studyDuration = studyDuration
     self.attachments = attachments
     self.feedbacks = feedbacks
   }
@@ -52,6 +68,7 @@ struct AttachmentModel: Identifiable, Hashable {
 struct StudyRecordCreateInput {
   let title: String
   let content: String
+  let studyDuration: TimeInterval
   let attachments: [AttachmentCreateInput]
 }
 
@@ -65,6 +82,7 @@ struct AttachmentCreateInput {
 struct StudyRecordUpdateInput {
   let title: String?
   let content: String?
+  let studyDuration: TimeInterval?
   let attachments: [AttachmentCreateInput]?
 }
 

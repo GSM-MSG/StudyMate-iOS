@@ -5,6 +5,7 @@
 //  Created by 최형우 on 6/2/25.
 //
 
+import AnalyticsClient
 import AmplitudeSwift
 import FirebaseAppCheck
 import FirebaseCore

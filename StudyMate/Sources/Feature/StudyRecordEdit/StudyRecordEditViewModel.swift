@@ -7,6 +7,7 @@ import UIKit
 final class StudyRecordEditViewModel {
   var title = ""
   var content = ""
+  var studyDuration: TimeInterval = 30 * 60
   var attachments: [AttachmentItem] = []
   private(set) var isLoading = false
   private(set) var errorMessage: String?
@@ -23,12 +24,26 @@ final class StudyRecordEditViewModel {
     !attachments.isEmpty
   }
   
+  var formattedDuration: String {
+    let formatter = DateComponentsFormatter()
+    formatter.allowedUnits = [.hour, .minute]
+    formatter.unitsStyle = .abbreviated
+    formatter.zeroFormattingBehavior = .dropAll
+    
+    if studyDuration < 60 {
+      return String(localized: "less_than_minute")
+    }
+    
+    return formatter.string(from: studyDuration) ?? String(localized: "unknown_duration")
+  }
+  
   init(record: StudyRecordModel, studyRecordInteractor: StudyRecordInteractor = LiveStudyRecordInteractor()) {
     self.originalRecord = record
     self.studyRecordInteractor = studyRecordInteractor
     
     self.title = record.title
     self.content = record.content
+    self.studyDuration = record.studyDuration
     
     self.attachments = record.attachments.map { attachment in
       AttachmentItem(
@@ -61,6 +76,7 @@ final class StudyRecordEditViewModel {
       let input = StudyRecordUpdateInput(
         title: title.trimmingCharacters(in: .whitespacesAndNewlines),
         content: content.trimmingCharacters(in: .whitespacesAndNewlines),
+        studyDuration: studyDuration,
         attachments: attachmentInputs
       )
       

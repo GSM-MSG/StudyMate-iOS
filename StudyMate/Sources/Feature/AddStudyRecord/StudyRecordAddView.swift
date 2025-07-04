@@ -36,7 +36,7 @@ struct StudyRecordAddView: View {
               TextField(String(localized: "title_placeholder"), text: $viewModel.title)
                 .textFieldStyle(PlainTextFieldStyle())
                 .font(.body)
-                .padding(4)
+                .padding()
                 .background {
                   RoundedRectangle(cornerRadius: 8)
                     .fill(Color(UIColor.systemGray6))
@@ -66,6 +66,26 @@ struct StudyRecordAddView: View {
                     .padding(.vertical, 12)
                     .allowsHitTesting(false)
                 }
+              }
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+              Text(String(localized: "study_duration"))
+                .font(.headline)
+                .fontWeight(.semibold)
+              
+              VStack(spacing: 8) {
+                Text(viewModel.formattedDuration)
+                  .font(.title3)
+                  .fontWeight(.medium)
+                  .foregroundStyle(.primary)
+                
+                TimePicker(duration: $viewModel.studyDuration)
+              }
+              .padding()
+              .background {
+                RoundedRectangle(cornerRadius: 8)
+                  .fill(Color(UIColor.systemGray6))
               }
             }
             
