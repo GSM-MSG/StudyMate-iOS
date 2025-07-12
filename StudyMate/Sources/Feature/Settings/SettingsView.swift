@@ -47,11 +47,11 @@ struct SettingsView: View {
         
         Section {
           HStack {
-            Image(systemName: "book.fill")
-              .foregroundColor(.blue)
+            Image(.appIconSymbol)
+              .resizable()
               .frame(width: 32, height: 32)
-              .background(Color.blue.opacity(0.1))
               .clipShape(RoundedRectangle(cornerRadius: 8))
+              .shadow(radius: 2)
             
             VStack(alignment: .leading, spacing: 2) {
               Text(String(localized: "app_name"))
