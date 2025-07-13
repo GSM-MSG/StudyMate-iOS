@@ -24,7 +24,6 @@ struct LiveStudyRecordInteractor: StudyRecordInteractor, Sendable {
   func fetchStudyRecords() async throws -> [StudyRecordModel] {
     try await coreDataStack.performQueryAsync { context in
       let request = StudyRecord.fetchRequest()
-      request.predicate = \StudyRecord.deletedTime == nil
       let records = try context.fetch(request)
       return records.map { $0.toDomainModel() }
     }
@@ -45,7 +44,7 @@ struct LiveStudyRecordInteractor: StudyRecordInteractor, Sendable {
   func fetchStudyRecord(id: String) async throws -> StudyRecordModel? {
     try await coreDataStack.performQueryAsync { context in
       let request = StudyRecord.fetchRequest()
-      request.predicate = \StudyRecord.identifier == id && \StudyRecord.deletedTime == nil
+      request.predicate = \StudyRecord.identifier == id
       request.fetchLimit = 1
       
       guard let record = try context.fetch(request).first else { return nil }
@@ -64,7 +63,7 @@ struct LiveStudyRecordInteractor: StudyRecordInteractor, Sendable {
   func updateStudyRecord(id: String, input: StudyRecordUpdateInput) async throws -> StudyRecordModel {
     try await coreDataStack.performAndSaveAsync { context in
       let request = StudyRecord.fetchRequest()
-      request.predicate = \StudyRecord.identifier == id && \StudyRecord.deletedTime == nil
+      request.predicate = \StudyRecord.identifier == id
       request.fetchLimit = 1
       
       guard let record = try context.fetch(request).first else {
@@ -79,21 +78,21 @@ struct LiveStudyRecordInteractor: StudyRecordInteractor, Sendable {
   func deleteStudyRecord(id: String) async throws {
     try await coreDataStack.performAndSaveAsync { context in
       let request = StudyRecord.fetchRequest()
-      request.predicate = \StudyRecord.identifier == id && \StudyRecord.deletedTime == nil
+      request.predicate = \StudyRecord.identifier == id
       request.fetchLimit = 1
       
       guard let record = try context.fetch(request).first else {
         throw StudyRecordError.recordNotFound
       }
-      
-      record.softDelete()
+
+      context.delete(record)
     }
   }
   
   func saveFeedbacks(for recordId: String, feedbacks: [StudyFeedbackCreateInput]) async throws -> StudyRecordModel {
     try await coreDataStack.performAndSaveAsync { context in
       let request = StudyRecord.fetchRequest()
-      request.predicate = \StudyRecord.identifier == recordId && \StudyRecord.deletedTime == nil
+      request.predicate = \StudyRecord.identifier == recordId
       request.fetchLimit = 1
       
       guard let record = try context.fetch(request).first else {
@@ -108,7 +107,7 @@ struct LiveStudyRecordInteractor: StudyRecordInteractor, Sendable {
   func clearFeedbacks(for recordId: String) async throws -> StudyRecordModel {
     try await coreDataStack.performAndSaveAsync { context in
       let request = StudyRecord.fetchRequest()
-      request.predicate = \StudyRecord.identifier == recordId && \StudyRecord.deletedTime == nil
+      request.predicate = \StudyRecord.identifier == recordId
       request.fetchLimit = 1
       
       guard let record = try context.fetch(request).first else {

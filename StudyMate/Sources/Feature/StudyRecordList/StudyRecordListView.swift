@@ -5,6 +5,7 @@
 //  Created by 최형우 on 6/2/25.
 //
 
+import AnalyticsClient
 import SwiftUI
 
 struct StudyRecordListView: View {
@@ -107,9 +108,12 @@ struct StudyRecordListView: View {
         
         VStack {
           Spacer()
+
           HStack {
             Spacer()
+
             Button {
+              AnalyticsClient.shared.track(event: .tapAddStudyRecord)
               isShowingAddView = true
             } label: {
               if #available(iOS 26.0, *) {
@@ -150,18 +154,24 @@ struct StudyRecordListView: View {
           }
         }
       }
-      .sheet(isPresented: $isShowingAddView) {
+      .navigationDestination(isPresented: $isShowingAddView) {
         StudyRecordAddView { newRecord in
           viewModel.addStudyRecord(newRecord)
         }
         .navigationTransition(ZoomNavigationTransition.zoom(sourceID: "add-record", in: addNamespace))
       }
-
       .navigationDestination(item: $selectedRecord) { record in
-        StudyRecordDetailView(record: record)
-          .navigationTransition(.zoom(sourceID: "record-\(record.id)", in: zoomNamespace))
-          .toolbarVisibility(.hidden, for: .tabBar)
+        StudyRecordDetailView(
+          record: record,
+          entry: .studyRecordList
+        )
+        .navigationTransition(.zoom(sourceID: "record-\(record.id)", in: zoomNamespace))
+        .toolbarVisibility(.hidden, for: .tabBar)
       }
+      .onAppear {
+        AnalyticsClient.shared.track(event: .viewStudyRecords)
+      }
+      .analyticsScreen(name: "study_records")
     }
   }
 }

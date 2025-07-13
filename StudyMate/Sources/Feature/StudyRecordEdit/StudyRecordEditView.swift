@@ -5,10 +5,11 @@
 //  Created by 최형우 on 6/2/25.
 //
 
-import SwiftUI
+import AnalyticsClient
 import PhotosUI
-import VisionKit
+import SwiftUI
 import UniformTypeIdentifiers
+import VisionKit
 
 struct StudyRecordEditView: View {
   @Environment(\.dismiss) private var dismiss
@@ -252,6 +253,10 @@ struct StudyRecordEditView: View {
           Text(errorMessage)
         }
       }
+      .onAppear {
+        AnalyticsClient.shared.track(event: .viewEditStudyRecord)
+      }
+      .analyticsScreen(name: "edit_study_record")
     }
   }
   

@@ -1,3 +1,4 @@
+import AnalyticsClient
 import Foundation
 import Observation
 import UIKit
@@ -67,6 +68,16 @@ final class StudyRecordAddViewModel {
       )
       
       let newRecord = try await studyRecordInteractor.createStudyRecord(input)
+
+      AnalyticsClient.shared.track(
+        event: .saveStudyRecord(
+          title: title,
+          contentLength: .init(length: content.count),
+          studyMinutes: Int(studyDuration / 60.0),
+          photoCount: attachments.filter { $0.type == .image }.count,
+          pdfCount: attachments.filter { $0.type == .pdf }.count
+        )
+      )
       
       resetForm()
       
@@ -150,4 +161,4 @@ private extension UIImage {
       return nil
     }
   }
-} 
+}

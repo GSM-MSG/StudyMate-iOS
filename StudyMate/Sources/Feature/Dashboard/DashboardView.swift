@@ -1,5 +1,6 @@
-import SwiftUI
+import AnalyticsClient
 import Charts
+import SwiftUI
 
 struct DashboardView: View {
   @State private var viewModel = DashboardViewModel()
@@ -50,10 +51,17 @@ struct DashboardView: View {
         }
       }
       .navigationDestination(item: $selectedRecord) { record in
-        StudyRecordDetailView(record: record)
-          .navigationTransition(.zoom(sourceID: "record-\(record.id)", in: zoomNamespace))
-          .toolbarVisibility(.hidden, for: .tabBar)
+        StudyRecordDetailView(
+          record: record,
+          entry: .dashboard
+        )
+        .navigationTransition(.zoom(sourceID: "record-\(record.id)", in: zoomNamespace))
+        .toolbarVisibility(.hidden, for: .tabBar)
       }
+      .onAppear {
+        AnalyticsClient.shared.track(event: .viewDashboard)
+      }
+      .analyticsScreen(name: "dashboard")
     }
   }
 }
@@ -316,6 +324,7 @@ private struct RecentStudyRecordsSection: View {
         
         if !records.isEmpty {
           Button(String(localized: "view_all")) {
+            AnalyticsClient.shared.track(event: .tapViewAllStudyRecords)
             tabCoordinator.selectStudyRecordList()
           }
           .font(.subheadline)

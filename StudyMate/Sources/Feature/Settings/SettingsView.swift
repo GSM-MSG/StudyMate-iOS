@@ -1,14 +1,17 @@
 import AnalyticsClient
+import FirebaseAnalytics
 import MessageUI
+import StoreKit
 import SwiftUI
 
 struct SettingsView: View {
+  @Environment(\.requestReview) var requestReview
   @State private var showingMailComposer = false
   @State private var showingShareSheet = false
   @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
   
   var body: some View {
-    NavigationView {
+    NavigationStack {
       List {
         Section(String(localized: "support")) {
           SettingsRowView(
@@ -32,6 +35,7 @@ struct SettingsView: View {
             title: String(localized: "rate_app"),
             subtitle: String(localized: "rate_app_subtitle")
           ) {
+            AnalyticsClient.shared.track(event: .tapRate)
             rateApp()
           }
           
@@ -41,6 +45,7 @@ struct SettingsView: View {
             title: String(localized: "share_app"),
             subtitle: String(localized: "share_app_subtitle")
           ) {
+            AnalyticsClient.shared.track(event: .tapShare)
             showingShareSheet = true
           }
         }
@@ -71,6 +76,10 @@ struct SettingsView: View {
       }
       .navigationTitle(String(localized: "settings"))
       .navigationBarTitleDisplayMode(.large)
+      .onAppear {
+        AnalyticsClient.shared.track(event: .viewSettings)
+      }
+      .analyticsScreen(name: "settings")
     }
     .sheet(isPresented: $showingMailComposer) {
       MailComposeView(result: $mailResult)
@@ -85,9 +94,7 @@ struct SettingsView: View {
   }
   
   private func rateApp() {
-    if let url = URL(string: "https://apps.apple.com/app/id\(getAppID())") {
-      UIApplication.shared.open(url)
-    }
+    requestReview()
   }
   
   private func openPrivacyPolicy() {

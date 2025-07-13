@@ -5,13 +5,20 @@
 //  Created by 최형우 on 6/2/25.
 //
 
+import AnalyticsClient
 import SwiftUI
 
 struct StudyRecordDetailView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var viewModel: StudyRecordDetailViewModel
+  private let entry: DefaultAnalyticsEvent.ViewStudyRecordDetailEntry
   
-  init(record: StudyRecordModel, studyRecordInteractor: StudyRecordInteractor = LiveStudyRecordInteractor()) {
+  init(
+    record: StudyRecordModel,
+    entry: DefaultAnalyticsEvent.ViewStudyRecordDetailEntry,
+    studyRecordInteractor: StudyRecordInteractor = LiveStudyRecordInteractor()
+  ) {
+    self.entry = entry
     self._viewModel = State(initialValue: StudyRecordDetailViewModel(record: record, studyRecordInteractor: studyRecordInteractor))
   }
   
@@ -19,23 +26,42 @@ struct StudyRecordDetailView: View {
     NavigationStack {
       VStack(spacing: 0) {
         TabView {
-          StudyContentTabView(record: viewModel.currentRecord)
-            .tabItem {
-              Label(String(localized: "study_content"), systemImage: "book.fill")
+          Tab {
+            StudyContentTabView(record: viewModel.currentRecord)
+              .onAppear {
+                AnalyticsClient.shared.track(event: .openStudyRecordContent)
+              }
+          } label: {
+            Label(String(localized: "study_content"), systemImage: "book.fill")
+          }
+
+          Tab {
+            AITutorTabView(
+              record: viewModel.currentRecord,
+              isGeneratingContent: viewModel.isGeneratingAIContent,
+              feedbacks: viewModel.feedbacks,
+              errorMessage: viewModel.errorMessage,
+              generateAIFeedback: {
+                if viewModel.feedbacks.isEmpty {
+                  AnalyticsClient.shared.track(event: .tapAiTutorAnalyze)
+                } else {
+                  AnalyticsClient.shared.track(event: .tapAiTutorReanalyze)
+                }
+                viewModel.generateAIFeedback()
+              }
+            )
+            .onAppear {
+              AnalyticsClient.shared.track(event: .openStudyRecordAiTutor)
             }
-          
-          AITutorTabView(
-            record: viewModel.currentRecord,
-            isGeneratingContent: viewModel.isGeneratingAIContent,
-            feedbacks: viewModel.feedbacks,
-            errorMessage: viewModel.errorMessage,
-            generateAIFeedback: viewModel.generateAIFeedback
-          )
-          .tabItem {
+          } label: {
             Label(String(localized: "ai_tutor"), systemImage: "brain.head.profile")
           }
         }
       }
+      .onAppear {
+        AnalyticsClient.shared.track(event: .viewStudyRecordDetail(entry: entry))
+      }
+      .analyticsScreen(name: "study_record_detail", extraParameters: ["entry": entry.analyticsValue])
       .navigationTitle(viewModel.currentRecord.title)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
@@ -69,6 +95,7 @@ struct StudyRecordDetailView: View {
         Button(String(localized: "delete"), role: .destructive) {
           Task {
             if await viewModel.deleteRecord() {
+              AnalyticsClient.shared.track(event: .deleteStudyRecord)
               dismiss()
             }
           }
@@ -474,15 +501,18 @@ struct AIFeedbackCard: View {
 
 #Preview {
   NavigationStack {
-    StudyRecordDetailView(record: StudyRecordModel(
-      id: "sample",
-      title: "Swift Basic Syntax Summary",
-      content: "Summarized the differences between variables and constants. `var` is a variable, `let` is a constant...",
-      createdTime: Date(),
-      updatedTime: Date(),
-      studyDuration: 1800, // 30분
-      attachments: [],
-      feedbacks: []
-    ))
+    StudyRecordDetailView(
+      record: StudyRecordModel(
+        id: "sample",
+        title: "Swift Basic Syntax Summary",
+        content: "Summarized the differences between variables and constants. `var` is a variable, `let` is a constant...",
+        createdTime: Date(),
+        updatedTime: Date(),
+        studyDuration: 1800, // 30분
+        attachments: [],
+        feedbacks: []
+      ),
+      entry: .studyRecordList
+    )
   }
 }
