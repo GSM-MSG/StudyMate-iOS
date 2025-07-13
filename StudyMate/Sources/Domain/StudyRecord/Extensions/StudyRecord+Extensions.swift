@@ -16,7 +16,6 @@ extension StudyRecord {
     self.studyDuration = input.studyDuration
     self.createdTime = Date()
     self.updatedTime = Date()
-    self.deletedTime = nil
     
     // Create attachments
     for attachmentInput in input.attachments {
@@ -68,12 +67,6 @@ extension StudyRecord {
     }
     
     self.updatedTime = Date()
-  }
-  
-  // MARK: - Soft Delete
-  
-  func softDelete() {
-    self.deletedTime = Date()
   }
   
   // MARK: - Feedback Management
@@ -195,8 +188,7 @@ extension StudyRecord {
     let contentPredicate = NSPredicate(format: "content CONTAINS[cd] %@", searchText)
     let searchPredicate = NSCompoundPredicate(orPredicateWithSubpredicates: [titlePredicate, contentPredicate])
     
-    let activePredicate = NSPredicate(format: "deletedTime == nil")
-    request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [activePredicate, searchPredicate])
+    request.predicate = searchPredicate
     
     return request
   }

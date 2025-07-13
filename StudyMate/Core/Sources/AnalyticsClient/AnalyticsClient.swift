@@ -2,21 +2,27 @@
 import FirebaseAnalytics
 import FirebaseCrashlytics
 import Foundation
+import OSLog
 
 public final class AnalyticsClient: Sendable {
   private let amplitude: Amplitude
 
   public static let shared = AnalyticsClient()
 
+  private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "", category: "AnalyticsClient")
+
   private init() {
+    let amplitudeAPIKey = Bundle.main.infoDictionary?["AMPLITUDE_API_KEY"] as? String
+    assert(amplitudeAPIKey != nil)
+
 #if DEBUG
     let amplitudeConfiguration = AmplitudeSwift.Configuration(
-      apiKey: "1be0066636d5569aab0585c8e4ff23fd",
+      apiKey: "",
       logLevel: .DEBUG
     )
 #else
     let amplitudeConfiguration = AmplitudeSwift.Configuration(
-      apiKey: "1be0066636d5569aab0585c8e4ff23fd"
+      apiKey: amplitudeAPIKey
     )
 #endif
     self.amplitude = Amplitude(
@@ -25,6 +31,9 @@ public final class AnalyticsClient: Sendable {
   }
 
   public func track(eventType: any AnalyticsEventType) {
+    let logMessage = "📈 ANALYTICS EVENT logged : \(eventType.name) | \(eventType.properties)"
+    logger.log("\(logMessage)")
+
     amplitude.track(
       eventType: eventType.name,
       eventProperties: eventType.properties
@@ -34,11 +43,18 @@ public final class AnalyticsClient: Sendable {
   }
 
   public func sendUserProperty(propertyType property: any AnalyticsUserPropertyType) {
+    let logMessage = "📈 ANALYTICS PROPERTY logged : \(property.name) | \(property.value)"
+    logger.log("\(logMessage)")
+
     let identify = AmplitudeSwift.Identify()
     identify.set(property: property.name, value: property.value)
     amplitude.identify(identify: identify)
 
-    FirebaseAnalytics.Analytics.setUserProperty(property.value, forName: property.name)
+    if case Optional<Any>.none = property.value {
+      FirebaseAnalytics.Analytics.setUserProperty(nil, forName: property.name)
+    } else {
+      FirebaseAnalytics.Analytics.setUserProperty("\(property.value)", forName: property.name)
+    }
   }
 
   public func setUserID(userID: String) {

@@ -196,6 +196,8 @@
 /* Begin XCBuildConfiguration section */
 		4678DEB02DEDDE67003A70EE /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 4678DEA62DEDDE64003A70EE /* StudyMate */;
+			baseConfigurationReferenceRelativePath = "Resources/XCConfig/StudyMate-Debug.xcconfig";
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -260,6 +262,8 @@
 		};
 		4678DEB12DEDDE67003A70EE /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 4678DEA62DEDDE64003A70EE /* StudyMate */;
+			baseConfigurationReferenceRelativePath = "Resources/XCConfig/StudyMate-Release.xcconfig";
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;

@@ -1,6 +1,7 @@
+import AIService
+import AnalyticsClient
 import Foundation
 import Observation
-import AIService
 
 @Observable
 @MainActor

@@ -5,12 +5,18 @@
 //  Created by 최형우 on 6/2/25.
 //
 
-import SwiftUI
-import VisionKit
+import AnalyticsClient
 import PhotosUI
+import SwiftUI
 import UniformTypeIdentifiers
+import VisionKit
 
 struct StudyRecordAddView: View {
+  private enum FocusField {
+    case title
+    case content
+  }
+
   @Environment(\.dismiss) private var dismiss
   @State private var viewModel = StudyRecordAddViewModel()
   @State private var showingImagePicker = false
@@ -19,231 +25,245 @@ struct StudyRecordAddView: View {
   @State private var showingActionSheet = false
   @State private var showingScannerSheet = false
   @State private var selectedPhoto: PhotosPickerItem?
-  @FocusState private var isContentFieldFocused: Bool
-  
+  @FocusState private var focusedField: FocusField?
+
+  @State private var onAppeared = false
+
   let onSave: (StudyRecordModel) -> Void
-  
+
   var body: some View {
-    NavigationStack {
-      VStack(spacing: 0) {
-        ScrollView {
-          LazyVStack(spacing: 24) {
-            VStack(alignment: .leading, spacing: 12) {
-              Text(String(localized: "title"))
-                .font(.headline)
-                .fontWeight(.semibold)
-              
-              TextField(String(localized: "title_placeholder"), text: $viewModel.title)
-                .textFieldStyle(PlainTextFieldStyle())
+    VStack(spacing: 0) {
+      ScrollView {
+        LazyVStack(spacing: 24) {
+          VStack(alignment: .leading, spacing: 12) {
+            Text(String(localized: "title"))
+              .font(.headline)
+              .fontWeight(.semibold)
+
+            TextField(
+              String(localized: "title_placeholder"), text: $viewModel.title
+            )
+            .focused($focusedField, equals: .title)
+            .textFieldStyle(PlainTextFieldStyle())
+            .font(.body)
+            .padding()
+            .background {
+              RoundedRectangle(cornerRadius: 8)
+                .fill(Color(UIColor.systemGray6))
+            }
+          }
+
+          VStack(alignment: .leading, spacing: 12) {
+            Text(String(localized: "study_content"))
+              .font(.headline)
+              .fontWeight(.semibold)
+
+            ZStack(alignment: .topLeading) {
+              TextEditor(text: $viewModel.content)
+                .focused($focusedField, equals: .content)
                 .font(.body)
-                .padding()
+                .scrollContentBackground(.hidden)
                 .background {
                   RoundedRectangle(cornerRadius: 8)
                     .fill(Color(UIColor.systemGray6))
                 }
+                .frame(minHeight: 200)
+
+              if viewModel.content.isEmpty {
+                Text(String(localized: "content_placeholder"))
+                  .foregroundColor(.secondary)
+                  .padding(.horizontal, 8)
+                  .padding(.vertical, 12)
+                  .allowsHitTesting(false)
+              }
             }
-            
+          }
+
+          VStack(alignment: .leading, spacing: 12) {
+            Text(String(localized: "study_duration"))
+              .font(.headline)
+              .fontWeight(.semibold)
+
+            VStack(spacing: 8) {
+              Text(viewModel.formattedDuration)
+                .font(.title3)
+                .fontWeight(.medium)
+                .foregroundStyle(.primary)
+
+              TimePicker(duration: $viewModel.studyDuration)
+            }
+            .padding()
+            .background {
+              RoundedRectangle(cornerRadius: 8)
+                .fill(Color(UIColor.systemGray6))
+            }
+          }
+
+          if !viewModel.attachments.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
-              Text(String(localized: "study_content"))
+              Text(String(localized: "attachments"))
                 .font(.headline)
                 .fontWeight(.semibold)
-              
-              ZStack(alignment: .topLeading) {
-                TextEditor(text: $viewModel.content)
-                  .focused($isContentFieldFocused)
-                  .font(.body)
-                  .scrollContentBackground(.hidden)
-                  .background {
-                    RoundedRectangle(cornerRadius: 8)
-                      .fill(Color(UIColor.systemGray6))
-                  }
-                  .frame(minHeight: 200)
-                
-                if viewModel.content.isEmpty {
-                  Text(String(localized: "content_placeholder"))
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 12)
-                    .allowsHitTesting(false)
-                }
-              }
-            }
-            
-            VStack(alignment: .leading, spacing: 12) {
-              Text(String(localized: "study_duration"))
-                .font(.headline)
-                .fontWeight(.semibold)
-              
-              VStack(spacing: 8) {
-                Text(viewModel.formattedDuration)
-                  .font(.title3)
-                  .fontWeight(.medium)
-                  .foregroundStyle(.primary)
-                
-                TimePicker(duration: $viewModel.studyDuration)
-              }
-              .padding()
-              .background {
-                RoundedRectangle(cornerRadius: 8)
-                  .fill(Color(UIColor.systemGray6))
-              }
-            }
-            
-            if !viewModel.attachments.isEmpty {
-              VStack(alignment: .leading, spacing: 12) {
-                Text(String(localized: "attachments"))
-                  .font(.headline)
-                  .fontWeight(.semibold)
-                
-                LazyVGrid(columns: [
+
+              LazyVGrid(
+                columns: [
                   GridItem(.flexible()),
-                  GridItem(.flexible())
-                ], spacing: 12) {
-                  ForEach(viewModel.attachments) { attachment in
-                    AttachmentRowView(
-                      attachment: attachment,
-                      onRemove: {
-                        viewModel.removeAttachment(attachment)
-                      }
-                    )
-                  }
+                  GridItem(.flexible()),
+                ], spacing: 12
+              ) {
+                ForEach(viewModel.attachments) { attachment in
+                  AttachmentRowView(
+                    attachment: attachment,
+                    onRemove: {
+                      viewModel.removeAttachment(attachment)
+                    }
+                  )
                 }
               }
             }
-            
-            VStack(alignment: .leading, spacing: 12) {
-              Text(String(localized: "add_attachments"))
-                .font(.headline)
-                .fontWeight(.semibold)
-              
-              HStack(spacing: 12) {
-                Button {
-                  showingActionSheet = true
-                } label: {
-                  HStack {
-                    Image(systemName: "camera")
-                    Text(String(localized: "photo"))
-                      .minimumScaleFactor(0.8)
-                  }
-                  .frame(maxWidth: .infinity)
-                  .padding()
-                  .background(Color.blue.opacity(0.1))
-                  .foregroundColor(.blue)
-                  .cornerRadius(8)
+          }
+
+          VStack(alignment: .leading, spacing: 12) {
+            Text(String(localized: "add_attachments"))
+              .font(.headline)
+              .fontWeight(.semibold)
+
+            HStack(spacing: 12) {
+              Button {
+                showingActionSheet = true
+              } label: {
+                HStack {
+                  Image(systemName: "camera")
+                  Text(String(localized: "photo"))
+                    .minimumScaleFactor(0.8)
                 }
-                .confirmationDialog(String(localized: "photo_selection"), isPresented: $showingActionSheet) {
-                  Button(String(localized: "camera")) {
-                    showingCameraPicker = true
-                  }
-                  Button(String(localized: "photo_library")) {
-                    showingImagePicker = true
-                  }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.blue.opacity(0.1))
+                .foregroundColor(.blue)
+                .cornerRadius(8)
+              }
+              .confirmationDialog(
+                String(localized: "photo_selection"),
+                isPresented: $showingActionSheet
+              ) {
+                Button(String(localized: "camera")) {
+                  showingCameraPicker = true
                 }
-                
-                Button {
-                  showingDocumentPicker = true
-                } label: {
-                  HStack {
-                    Image(systemName: "doc")
-                    Text("PDF")
-                      .minimumScaleFactor(0.8)
-                  }
-                  .frame(maxWidth: .infinity)
-                  .padding()
-                  .background(Color.green.opacity(0.1))
-                  .foregroundColor(.green)
-                  .cornerRadius(8)
+                Button(String(localized: "photo_library")) {
+                  showingImagePicker = true
                 }
               }
+
+              Button {
+                showingDocumentPicker = true
+              } label: {
+                HStack {
+                  Image(systemName: "doc")
+                  Text("PDF")
+                    .minimumScaleFactor(0.8)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.green.opacity(0.1))
+                .foregroundColor(.green)
+                .cornerRadius(8)
+              }
             }
-            
-            Spacer(minLength: 100)
-          }
-          .padding(20)
-        }
-        
-        VStack(spacing: 16) {
-          saveButton()
-        }
-        .background(.ultraThinMaterial)
-      }
-      .navigationTitle(String(localized: "add_study_record_title"))
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .navigationBarLeading) {
-          Button(String(localized: "cancel")) {
-            dismiss()
-          }
-        }
-
-        ToolbarItemGroup(placement: .keyboard) {
-          Button {
-            showingScannerSheet = true
-          } label: {
-            Image(systemName: "doc.text.viewfinder")
           }
 
-          Spacer()
+          Spacer(minLength: 100)
         }
+        .padding(20)
       }
-      .sheet(isPresented: $showingImagePicker) {
-        PhotosPicker("", selection: $selectedPhoto, matching: .images)
+
+      VStack(spacing: 16) {
+        saveButton()
       }
-      .sheet(isPresented: $showingCameraPicker) {
-        CameraView { image in
+      .background(.ultraThinMaterial)
+    }
+    .onAppear {
+      guard onAppeared == false else { return }
+      onAppeared = true
+      focusedField = .title
+      AnalyticsClient.shared.track(event: .viewAddStudyRecord)
+    }
+    .analyticsScreen(name: "add_study_record")
+    .navigationTitle(String(localized: "add_study_record_title"))
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      ToolbarItemGroup(placement: .keyboard) {
+        Button {
+          showingScannerSheet = true
+        } label: {
+          Image(systemName: "doc.text.viewfinder")
+        }
+
+        Spacer()
+      }
+    }
+    .sheet(isPresented: $showingImagePicker) {
+      PhotosPicker("", selection: $selectedPhoto, matching: .images)
+    }
+    .sheet(isPresented: $showingCameraPicker) {
+      CameraView { image in
+        let attachment = AttachmentItem(
+          type: .image,
+          image: image,
+          name: "Camera_\(Date().formatted(.dateTime.hour().minute().second()))"
+        )
+        viewModel.addAttachment(attachment)
+      }
+    }
+    .sheet(isPresented: $showingDocumentPicker) {
+      DocumentPicker { urls in
+        for url in urls {
           let attachment = AttachmentItem(
-            type: .image,
-            image: image,
-            name: "Camera_\(Date().formatted(.dateTime.hour().minute().second()))"
+            type: .pdf,
+            url: url,
+            name: url.lastPathComponent
           )
           viewModel.addAttachment(attachment)
         }
       }
-      .sheet(isPresented: $showingDocumentPicker) {
-        DocumentPicker { urls in
-          for url in urls {
+    }
+    .fullScreenCover(isPresented: $showingScannerSheet) {
+      DocumentScannerView(
+        onTextRecognized: { text in
+          viewModel.appendTextFromScanner(text)
+        },
+        dismiss: {
+          showingScannerSheet = false
+        }
+      )
+    }
+    .onChange(of: selectedPhoto) { _, newPhoto in
+      if let newPhoto = newPhoto {
+        Task {
+          if let data = try? await newPhoto.loadTransferable(type: Data.self),
+            let image = UIImage(data: data)
+          {
             let attachment = AttachmentItem(
-              type: .pdf,
-              url: url,
-              name: url.lastPathComponent
+              type: .image,
+              image: image,
+              name:
+                "Photo_\(Date().formatted(.dateTime.hour().minute().second()))"
             )
             viewModel.addAttachment(attachment)
           }
         }
       }
-      .fullScreenCover(isPresented: $showingScannerSheet) {
-        DocumentScannerView(
-          onTextRecognized: { text in
-            viewModel.appendTextFromScanner(text)
-          },
-          dismiss: {
-            showingScannerSheet = false
-          }
-        )
+    }
+    .alert(
+      String(localized: "error"),
+      isPresented: .constant(viewModel.errorMessage != nil)
+    ) {
+      Button(String(localized: "confirm")) {
+        viewModel.clearError()
       }
-      .onChange(of: selectedPhoto) { _, newPhoto in
-        if let newPhoto = newPhoto {
-          Task {
-            if let data = try? await newPhoto.loadTransferable(type: Data.self),
-               let image = UIImage(data: data) {
-              let attachment = AttachmentItem(
-                type: .image,
-                image: image,
-                name: "Photo_\(Date().formatted(.dateTime.hour().minute().second()))"
-              )
-              viewModel.addAttachment(attachment)
-            }
-          }
-        }
-      }
-      .alert(String(localized: "error"), isPresented: .constant(viewModel.errorMessage != nil)) {
-        Button(String(localized: "confirm")) {
-          viewModel.clearError()
-        }
-      } message: {
-        if let errorMessage = viewModel.errorMessage {
-          Text(errorMessage)
-        }
+    } message: {
+      if let errorMessage = viewModel.errorMessage {
+        Text(errorMessage)
       }
     }
   }
@@ -273,7 +293,7 @@ struct StudyRecordAddView: View {
             .padding()
         }
       }
-//      .glassEffect(.regular.tint(viewModel.isValidInput ? Color.accentColor : Color.gray).interactive())
+      //      .glassEffect(.regular.tint(viewModel.isValidInput ? Color.accentColor : Color.gray).interactive())
       .disabled(!viewModel.isValidInput || viewModel.isLoading)
       .padding(.horizontal, 20)
       .padding(.bottom, 34)
@@ -316,7 +336,7 @@ struct StudyRecordAddView: View {
 struct AttachmentRowView: View {
   let attachment: AttachmentItem
   let onRemove: () -> Void
-  
+
   var body: some View {
     HStack {
       if attachment.type == .image {
@@ -341,20 +361,23 @@ struct AttachmentRowView: View {
           .background(Color.blue.opacity(0.1))
           .cornerRadius(8)
       }
-      
+
       VStack(alignment: .leading, spacing: 4) {
         Text(attachment.name)
           .font(.subheadline)
           .fontWeight(.medium)
           .lineLimit(1)
-        
-        Text(attachment.type == .image ? String(localized: "image") : String(localized: "document"))
-          .font(.caption)
-          .foregroundColor(.secondary)
+
+        Text(
+          attachment.type == .image
+            ? String(localized: "image") : String(localized: "document")
+        )
+        .font(.caption)
+        .foregroundColor(.secondary)
       }
-      
+
       Spacer()
-      
+
       Button(action: onRemove) {
         Image(systemName: "xmark.circle.fill")
           .foregroundColor(.red)
@@ -370,4 +393,4 @@ struct AttachmentRowView: View {
 
 #Preview {
   StudyRecordAddView { _ in }
-} 
+}

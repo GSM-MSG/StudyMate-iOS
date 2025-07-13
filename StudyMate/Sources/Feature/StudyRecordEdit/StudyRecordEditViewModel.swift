@@ -1,3 +1,4 @@
+import AnalyticsClient
 import Foundation
 import Observation
 import UIKit
@@ -81,6 +82,16 @@ final class StudyRecordEditViewModel {
       )
       
       let updatedRecord = try await studyRecordInteractor.updateStudyRecord(id: originalRecord.id, input: input)
+
+      AnalyticsClient.shared.track(
+        event: .editStudyRecord(
+          title: title,
+          contentLength: .init(length: content.count),
+          studyMinutes: Int(studyDuration / 60.0),
+          photoCount: attachments.filter { $0.type == .image }.count,
+          pdfCount: attachments.filter { $0.type == .pdf }.count
+        )
+      )
       
       isLoading = false
       return updatedRecord
