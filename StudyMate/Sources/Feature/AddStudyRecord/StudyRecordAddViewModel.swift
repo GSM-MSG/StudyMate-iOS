@@ -52,12 +52,20 @@ final class StudyRecordAddViewModel {
     
     do {
       let attachmentInputs = attachments.compactMap { attachment -> AttachmentCreateInput? in
-        guard let url = attachment.url?.absoluteString ?? attachment.image?.saveToDocuments() else {
-          return nil
+        let url: String?
+        
+        if let image = attachment.image {
+          url = image.saveToDocuments()
+        } else if let tempURL = attachment.url {
+          url = tempURL.saveToDocuments()
+        } else {
+          url = nil
         }
         
+        guard let finalURL = url else { return nil }
+        
         let type: AttachmentModel.AttachmentType = attachment.type == .image ? .image : .document
-        return AttachmentCreateInput(type: type, url: url)
+        return AttachmentCreateInput(type: type, url: finalURL)
       }
       
       let input = StudyRecordCreateInput(
@@ -143,7 +151,7 @@ struct AttachmentItem: Identifiable, Sendable {
   }
 }
 
-// MARK: - UIImage Extension for saving
+// MARK: - Extensions for saving
 
 private extension UIImage {
   func saveToDocuments() -> String? {
@@ -158,6 +166,23 @@ private extension UIImage {
       return fileURL.absoluteString
     } catch {
       print("Failed to save image: \(error)")
+      return nil
+    }
+  }
+}
+
+private extension URL {
+  func saveToDocuments() -> String? {
+    guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
+    
+    let fileName = "\(UUID().uuidString).\(self.pathExtension)"
+    let destinationURL = documentsDirectory.appendingPathComponent(fileName)
+    
+    do {
+      try FileManager.default.copyItem(at: self, to: destinationURL)
+      return destinationURL.absoluteString
+    } catch {
+      print("Failed to save file: \(error)")
       return nil
     }
   }

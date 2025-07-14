@@ -40,16 +40,26 @@ public struct AIFeedbackGenerator: Sendable {
   ) async throws -> [StudyFeedbackDTO] {
     let prompt = createPrompt(for: studyRecord, userLanguage: userLanguage)
     
-    let contentModels: [ModelContent] = studyRecord.attachments.compactMap {
-      switch $0.type {
+    let contentModels: [ModelContent] = studyRecord.attachments.compactMap { attachment -> ModelContent? in
+      switch attachment.type {
       case .image:
         guard
-          let image = UIImage(contentsOfFile: $0.url)
+          let image = UIImage(contentsOfFile: attachment.url)
         else { return nil }
         return ModelContent(parts: image.partsValue)
 
       case .pdf:
-        return ModelContent(parts: FileDataPart(uri: $0.url, mimeType: "application/pdf"))
+        let url = URL(filePath: attachment.url)
+        
+        url.startAccessingSecurityScopedResource()
+        do {
+          let content = try ModelContent(parts: InlineDataPart(data: Data(contentsOf: url), mimeType: "application/pdf"))
+          url.stopAccessingSecurityScopedResource()
+          return content
+        } catch {
+          url.stopAccessingSecurityScopedResource()
+          return nil
+        }
       }
     } + [.init(parts: prompt)]
     
@@ -153,4 +163,4 @@ private struct AIFeedbackItem: Codable {
   let content: String
   let icon: String
   let color: String
-} 
+}
