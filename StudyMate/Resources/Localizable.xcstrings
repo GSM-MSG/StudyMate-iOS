@@ -1,9 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-
-    },
     "(%lld)" : {
 
     },
@@ -581,6 +578,125 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "分析您的学习内容并提供个性化反馈"
+          }
+        }
+      }
+    },
+    "ai_feedback_error_generate_content_error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI content generation error. Please try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 콘텐츠 생성 중 오류가 발생했습니다. 다시 시도해주세요."
+          }
+        }
+      }
+    },
+    "ai_feedback_error_invalid_response" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid AI response format. Please try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 응답 형식이 올바르지 않습니다. 다시 시도해주세요."
+          }
+        }
+      }
+    },
+    "ai_feedback_error_network_error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Network error occurred. Please try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "네트워크 오류가 발생했습니다. 다시 시도해주세요."
+          }
+        }
+      }
+    },
+    "ai_feedback_error_no_response" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No response from AI. Please try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI로부터 응답을 받지 못했습니다. 다시 시도해주세요."
+          }
+        }
+      }
+    },
+    "ai_feedback_error_prompt_blocked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content blocked by safety filter. Please try with different content."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "콘텐츠가 안전 필터에 의해 차단되었습니다. 다른 내용으로 시도해주세요."
+          }
+        }
+      }
+    },
+    "ai_feedback_error_response_stopped_early" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI response ended unexpectedly. Please try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 응답이 예상보다 일찍 종료되었습니다. 다시 시도해주세요."
+          }
+        }
+      }
+    },
+    "ai_feedback_error_underlying" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unexpected error occurred: %@. Please try again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예상치 못한 오류가 발생했습니다: %@. 다시 시도해주세요."
           }
         }
       }

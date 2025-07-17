@@ -75,8 +75,9 @@ public struct AIFeedbackGenerator: Sendable {
         
         return try parseFeedbackResponse(responseText)
       } catch {
-        lastError = error
-        print("Model \(modelNames[index]) failed with error: \(error.localizedDescription)")
+        let mappedError = mapGenerateContentError(error)
+        lastError = mappedError
+        print("Model \(modelNames[index]) failed with error: \(mappedError.localizedDescription)")
         
         if index < models.count - 1 {
           continue
@@ -134,24 +135,28 @@ public struct AIFeedbackGenerator: Sendable {
     }
   }
   
-
+  private func mapGenerateContentError(_ error: Error) -> AIFeedbackError {
+    switch error {
+    case GenerateContentError.promptBlocked(let response):
+      return .promptBlocked
+    case GenerateContentError.responseStoppedEarly(let reason, let response):
+      return .responseStoppedEarly
+    case GenerateContentError.internalError(let error):
+      return .generateContentError(error)
+    default:
+      return .underlying(error)
+    }
+  }
 }
 
-public enum AIFeedbackError: LocalizedError {
+public enum AIFeedbackError: Error {
   case noResponse
   case invalidResponse
   case networkError
-  
-  public var errorDescription: String? {
-    switch self {
-    case .noResponse:
-      return "No Response"
-    case .invalidResponse:
-      return "Invalid Response"
-    case .networkError:
-      return "Network error ocuured"
-    }
-  }
+  case promptBlocked
+  case responseStoppedEarly
+  case generateContentError(Swift.Error)
+  case underlying(Swift.Error)
 }
 
 private struct AIFeedbackResponse: Codable {
