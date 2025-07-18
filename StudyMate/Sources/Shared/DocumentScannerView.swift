@@ -7,84 +7,76 @@ struct DocumentScannerView: UIViewControllerRepresentable {
   let onTextRecognized: (String) -> Void
   let dismiss: () -> Void
   
-  func makeUIViewController(context: Context) -> DataScannerViewController {
-    let scanner = DataScannerViewController(
-      recognizedDataTypes: [.text()],
-      qualityLevel: .balanced,
-      recognizesMultipleItems: true,
-      isHighFrameRateTrackingEnabled: false,
-      isPinchToZoomEnabled: true,
-      isGuidanceEnabled: true,
-      isHighlightingEnabled: true
-    )
-    
+  func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
+    let scanner = VNDocumentCameraViewController()
     scanner.delegate = context.coordinator
-    
-    scanner.navigationItem.leftBarButtonItem = UIBarButtonItem(
-      title: String(localized: "cancel"),
-      style: .plain,
-      target: context.coordinator,
-      action: #selector(context.coordinator.cancelScanning)
-    )
-    
-    scanner.navigationItem.rightBarButtonItem = UIBarButtonItem(
-      title: String(localized: "done"),
-      style: .done,
-      target: context.coordinator,
-      action: #selector(context.coordinator.finishScanning)
-    )
-    
     return scanner
   }
   
-  func updateUIViewController(_ uiViewController: DataScannerViewController, context: Context) {}
+  func updateUIViewController(_ uiViewController: VNDocumentCameraViewController, context: Context) {}
   
   func makeCoordinator() -> Coordinator {
     Coordinator(self)
   }
   
-  class Coordinator: NSObject, DataScannerViewControllerDelegate {
+  @MainActor
+  final class Coordinator: NSObject, @preconcurrency VNDocumentCameraViewControllerDelegate {
     let parent: DocumentScannerView
-    private var recognizedTexts: [String] = []
     
     init(_ parent: DocumentScannerView) {
       self.parent = parent
     }
     
-    func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
-      switch item {
-      case .text(let text):
-        if !recognizedTexts.contains(text.transcript) {
-          recognizedTexts.append(text.transcript)
-        }
-      default:
-        break
-      }
-    }
-    
-    func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {
-      for item in addedItems {
-        switch item {
-        case .text(let text):
-          if !recognizedTexts.contains(text.transcript) {
-            recognizedTexts.append(text.transcript)
+    func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
+      var recognizedTexts: [String] = []
+      
+      for pageIndex in 0..<scan.pageCount {
+        let image = scan.imageOfPage(at: pageIndex)
+        recognizeText(from: image) { text in
+          if !text.isEmpty {
+            recognizedTexts.append(text)
           }
-        default:
-          break
         }
       }
-    }
-    
-    @objc func cancelScanning() {
-      parent.dismiss()
-    }
-    
-    @objc func finishScanning() {
+      
       let combinedText = recognizedTexts.joined(separator: " ")
       if !combinedText.isEmpty {
         parent.onTextRecognized(combinedText)
       }
       parent.dismiss()
+    }
+    
+    func documentCameraViewControllerDidCancel(_ controller: VNDocumentCameraViewController) {
+      parent.dismiss()
+    }
+    
+    func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: Error) {
+      parent.dismiss()
+    }
+    
+    private func recognizeText(from image: UIImage, completion: @escaping (String) -> Void) {
+      guard let cgImage = image.cgImage else {
+        completion("")
+        return
+      }
+      
+      let request = VNRecognizeTextRequest { request, error in
+        guard let observations = request.results as? [VNRecognizedTextObservation] else {
+          completion("")
+          return
+        }
+        
+        let recognizedText = observations.compactMap { observation in
+          observation.topCandidates(1).first?.string
+        }.joined(separator: " ")
+        
+        completion(recognizedText)
+      }
+      
+      request.recognitionLevel = .accurate
+      
+      let handler = VNImageRequestHandler(cgImage: cgImage)
+      try? handler.perform([request])
     }
   }
 }

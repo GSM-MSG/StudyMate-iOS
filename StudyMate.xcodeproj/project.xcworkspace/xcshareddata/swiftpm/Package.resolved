@@ -1,5 +1,5 @@
 {
-  "originHash" : "7751d1febc00503919b79b19e00f7bd20d941705b40e204a072d280282a64b57",
+  "originHash" : "9cd92eaf67097c184dacc32be09af0160724a0bcf6e9d8e687dbb0f8e11d55ac",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amplitude/Amplitude-Swift.git",
       "state" : {
-        "revision" : "9b5ed56da4e92d5a537d2d7a0af8307f922731a7",
-        "version" : "1.13.6"
+        "revision" : "a065ef291bce79ba2812028d2826f033d47cd599",
+        "version" : "1.13.8"
       }
     },
     {
@@ -24,8 +24,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amplitude/AmplitudeCore-Swift.git",
       "state" : {
-        "revision" : "ba5b2d3c7f41cdea70d879fe2338993d4395d12c",
-        "version" : "1.0.13"
+        "revision" : "13fd0eb0aa080816ffa409669758b2e8787322b2",
+        "version" : "1.1.0"
       }
     },
     {
@@ -51,8 +51,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/firebase/firebase-ios-sdk",
       "state" : {
-        "revision" : "45d327fcbe7793747295346c2209ad419bdead74",
-        "version" : "11.14.0"
+        "revision" : "fdc352fabaf5916e7faa1f96ad02b1957e93e5a5",
+        "version" : "11.15.0"
       }
     },
     {
@@ -60,8 +60,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/googleads/google-ads-on-device-conversion-ios-sdk",
       "state" : {
-        "revision" : "70a7857886f065a40486a7607268781c49db04ae",
-        "version" : "2.0.0"
+        "revision" : "428d8bb138e00f9a3f4f61cc6cd8863607524f65",
+        "version" : "2.1.0"
       }
     },
     {
@@ -69,8 +69,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/GoogleAppMeasurement.git",
       "state" : {
-        "revision" : "406f72d0d5e9445fd1cf782db3e9e338cee2bed4",
-        "version" : "11.14.0"
+        "revision" : "45ce435e9406d3c674dd249a042b932bee006f60",
+        "version" : "11.15.0"
       }
     },
     {
@@ -150,8 +150,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/RevenueCat/purchases-ios.git",
       "state" : {
-        "revision" : "f7c5738962d14b7800addd2a517270aa66d5ce29",
-        "version" : "5.29.0"
+        "revision" : "9cb74af9c5e9b4e9c22a511d8df4481fa7e3de16",
+        "version" : "5.32.0"
       }
     },
     {

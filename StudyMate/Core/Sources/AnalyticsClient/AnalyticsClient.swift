@@ -22,7 +22,7 @@ public final class AnalyticsClient: Sendable {
     )
 #else
     let amplitudeConfiguration = AmplitudeSwift.Configuration(
-      apiKey: amplitudeAPIKey
+      apiKey: amplitudeAPIKey!
     )
 #endif
     self.amplitude = Amplitude(

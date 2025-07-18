@@ -190,11 +190,13 @@ struct StudyRecordEditView: View {
           }
 
           Spacer()
+          
+          Button(String(localized: "done")) {
+            isContentFieldFocused = false
+          }
         }
       }
-      .sheet(isPresented: $showingImagePicker) {
-        PhotosPicker("", selection: $selectedPhoto, matching: .images)
-      }
+      .photosPicker(isPresented: $showingImagePicker, selection: $selectedPhoto, matching: .images)
       .sheet(isPresented: $showingCameraPicker) {
         CameraView { image in
           let attachment = AttachmentItem(
@@ -226,6 +228,7 @@ struct StudyRecordEditView: View {
             showingScannerSheet = false
           }
         )
+        .ignoresSafeArea()
       }
       .onChange(of: selectedPhoto) { _, newPhoto in
         if let newPhoto = newPhoto {

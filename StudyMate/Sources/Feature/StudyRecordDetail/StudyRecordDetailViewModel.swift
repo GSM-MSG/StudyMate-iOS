@@ -124,3 +124,24 @@ final class StudyRecordDetailViewModel {
     errorMessage = nil
   }
 } 
+
+extension AIFeedbackError: @retroactive LocalizedError {
+  public var errorDescription: String? {
+    switch self {
+    case .noResponse:
+      return String(localized: "ai_feedback_error_no_response")
+    case .invalidResponse:
+      return String(localized: "ai_feedback_error_invalid_response")
+    case .networkError:
+      return String(localized: "ai_feedback_error_network_error")
+    case .promptBlocked:
+      return String(localized: "ai_feedback_error_prompt_blocked")
+    case .responseStoppedEarly:
+      return String(localized: "ai_feedback_error_response_stopped_early")
+    case .generateContentError(let error):
+      return String(localized: "ai_feedback_error_generate_content_error")
+    case .underlying(let error):
+      return String(localized: "ai_feedback_error_underlying", defaultValue: "Unexcepted error occurred: \(error.localizedDescription)")
+    }
+  }
+}
