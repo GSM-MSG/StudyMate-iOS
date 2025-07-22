@@ -36,7 +36,7 @@ public struct AIFeedbackGenerator: Sendable {
   
   public func generateFeedback(
     for studyRecord: StudyRecordDTO,
-    userLanguage: String = "Korean"
+    userLanguage: String
   ) async throws -> [StudyFeedbackDTO] {
     let prompt = createPrompt(for: studyRecord, userLanguage: userLanguage)
     

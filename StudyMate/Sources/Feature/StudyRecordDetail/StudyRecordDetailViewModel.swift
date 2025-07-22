@@ -139,7 +139,7 @@ extension AIFeedbackError: @retroactive LocalizedError {
     case .responseStoppedEarly:
       return String(localized: "ai_feedback_error_response_stopped_early")
     case .generateContentError(let error):
-      return String(localized: "ai_feedback_error_generate_content_error")
+      return String(localized: "ai_feedback_error_generate_content_error") + error.localizedDescription
     case .underlying(let error):
       return String(localized: "ai_feedback_error_underlying", defaultValue: "Unexcepted error occurred: \(error.localizedDescription)")
     }
