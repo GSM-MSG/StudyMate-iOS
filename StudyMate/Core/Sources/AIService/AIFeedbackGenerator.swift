@@ -36,20 +36,30 @@ public struct AIFeedbackGenerator: Sendable {
   
   public func generateFeedback(
     for studyRecord: StudyRecordDTO,
-    userLanguage: String = "Korean"
+    userLanguage: String
   ) async throws -> [StudyFeedbackDTO] {
     let prompt = createPrompt(for: studyRecord, userLanguage: userLanguage)
     
-    let contentModels: [ModelContent] = studyRecord.attachments.compactMap {
-      switch $0.type {
+    let contentModels: [ModelContent] = studyRecord.attachments.compactMap { attachment -> ModelContent? in
+      switch attachment.type {
       case .image:
         guard
-          let image = UIImage(contentsOfFile: $0.url)
+          let image = UIImage(contentsOfFile: attachment.url)
         else { return nil }
         return ModelContent(parts: image.partsValue)
 
       case .pdf:
-        return ModelContent(parts: FileDataPart(uri: $0.url, mimeType: "application/pdf"))
+        let url = URL(filePath: attachment.url)
+        
+        url.startAccessingSecurityScopedResource()
+        do {
+          let content = try ModelContent(parts: InlineDataPart(data: Data(contentsOf: url), mimeType: "application/pdf"))
+          url.stopAccessingSecurityScopedResource()
+          return content
+        } catch {
+          url.stopAccessingSecurityScopedResource()
+          return nil
+        }
       }
     } + [.init(parts: prompt)]
     
@@ -65,8 +75,9 @@ public struct AIFeedbackGenerator: Sendable {
         
         return try parseFeedbackResponse(responseText)
       } catch {
-        lastError = error
-        print("Model \(modelNames[index]) failed with error: \(error.localizedDescription)")
+        let mappedError = mapGenerateContentError(error)
+        lastError = mappedError
+        print("Model \(modelNames[index]) failed with error: \(mappedError.localizedDescription)")
         
         if index < models.count - 1 {
           continue
@@ -124,24 +135,28 @@ public struct AIFeedbackGenerator: Sendable {
     }
   }
   
-
+  private func mapGenerateContentError(_ error: Error) -> AIFeedbackError {
+    switch error {
+    case GenerateContentError.promptBlocked(let response):
+      return .promptBlocked
+    case GenerateContentError.responseStoppedEarly(let reason, let response):
+      return .responseStoppedEarly
+    case GenerateContentError.internalError(let error):
+      return .generateContentError(error)
+    default:
+      return .underlying(error)
+    }
+  }
 }
 
-public enum AIFeedbackError: LocalizedError {
+public enum AIFeedbackError: Error {
   case noResponse
   case invalidResponse
   case networkError
-  
-  public var errorDescription: String? {
-    switch self {
-    case .noResponse:
-      return "No Response"
-    case .invalidResponse:
-      return "Invalid Response"
-    case .networkError:
-      return "Network error ocuured"
-    }
-  }
+  case promptBlocked
+  case responseStoppedEarly
+  case generateContentError(Swift.Error)
+  case underlying(Swift.Error)
 }
 
 private struct AIFeedbackResponse: Codable {
@@ -153,4 +168,4 @@ private struct AIFeedbackItem: Codable {
   let content: String
   let icon: String
   let color: String
-} 
+}

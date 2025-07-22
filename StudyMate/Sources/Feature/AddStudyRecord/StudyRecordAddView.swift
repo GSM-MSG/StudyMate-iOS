@@ -200,11 +200,13 @@ struct StudyRecordAddView: View {
         }
 
         Spacer()
+        
+        Button(String(localized: "done")) {
+          focusedField = nil
+        }
       }
     }
-    .sheet(isPresented: $showingImagePicker) {
-      PhotosPicker("", selection: $selectedPhoto, matching: .images)
-    }
+    .photosPicker(isPresented: $showingImagePicker, selection: $selectedPhoto, matching: .images)
     .sheet(isPresented: $showingCameraPicker) {
       CameraView { image in
         let attachment = AttachmentItem(
@@ -226,6 +228,7 @@ struct StudyRecordAddView: View {
           viewModel.addAttachment(attachment)
         }
       }
+      .ignoresSafeArea()
     }
     .fullScreenCover(isPresented: $showingScannerSheet) {
       DocumentScannerView(
