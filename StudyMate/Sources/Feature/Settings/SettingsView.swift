@@ -9,6 +9,8 @@ struct SettingsView: View {
   @State private var showingMailComposer = false
   @State private var showingShareSheet = false
   @State private var mailResult: Result<MFMailComposeResult, Error>? = nil
+  @State private var onboardingViewModel = OnboardingViewModel()
+  @State private var showingOnboarding = false
   
   var body: some View {
     NavigationStack {
@@ -73,6 +75,17 @@ struct SettingsView: View {
         } header: {
           Text(String(localized: "app_info").uppercased())
         }
+
+        Section("settings_help_section") {
+          SettingsRowView(
+            icon: "questionmark.circle.fill",
+            iconColor: .blue,
+            title: String(localized: "settings_onboarding_replay_title"),
+            subtitle: String(localized: "settings_onboarding_replay_subtitle")
+          ) {
+            showingOnboarding = true
+          }
+        }
       }
       .navigationTitle(String(localized: "settings"))
       .navigationBarTitleDisplayMode(.large)
@@ -86,6 +99,11 @@ struct SettingsView: View {
     }
     .sheet(isPresented: $showingShareSheet) {
       ShareSheet(items: [shareText])
+    }
+    .fullScreenCover(isPresented: $showingOnboarding) {
+      OnboardingContainerView {
+        showingOnboarding = false
+      }
     }
   }
   

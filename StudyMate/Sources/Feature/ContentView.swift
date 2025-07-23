@@ -9,8 +9,22 @@ import SwiftUI
 
 struct ContentView: View {
   @State private var tabCoordinator = TabCoordinator()
+  @State private var onboardingViewModel = OnboardingViewModel()
   
   var body: some View {
+    Group {
+      if onboardingViewModel.isOnboardingCompleted {
+        mainAppView
+      } else {
+        OnboardingContainerView {
+          onboardingViewModel.isOnboardingCompleted = true
+        }
+      }
+    }
+    .animation(.easeInOut(duration: 0.5), value: onboardingViewModel.isOnboardingCompleted)
+  }
+  
+  private var mainAppView: some View {
     TabView(selection: $tabCoordinator.selectedTab) {
       Tab(value: StudyMateTab.dashboard) {
         DashboardView()
