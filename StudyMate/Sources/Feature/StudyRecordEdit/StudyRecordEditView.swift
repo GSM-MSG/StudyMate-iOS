@@ -17,10 +17,12 @@ struct StudyRecordEditView: View {
   @State private var showingImagePicker = false
   @State private var showingCameraPicker = false
   @State private var showingDocumentPicker = false
+  @State private var showingAudioPicker = false
   @State private var showingActionSheet = false
   @State private var showingScannerSheet = false
   @State private var selectedPhoto: PhotosPickerItem?
   @FocusState private var isContentFieldFocused: Bool
+  @State private var showAudioLimitAlert = false
   
   let onSave: (StudyRecordModel) -> Void
   
@@ -88,6 +90,7 @@ struct StudyRecordEditView: View {
                 
                 TimePicker(duration: $viewModel.studyDuration)
               }
+              .frame(maxWidth: .infinity)
               .padding()
               .background {
                 RoundedRectangle(cornerRadius: 8)
@@ -122,43 +125,129 @@ struct StudyRecordEditView: View {
                 .font(.headline)
                 .fontWeight(.semibold)
               
-              HStack(spacing: 12) {
-                Button {
-                  showingActionSheet = true
-                } label: {
-                  HStack {
-                    Image(systemName: "camera")
-                    Text(String(localized: "photo"))
-                      .minimumScaleFactor(0.8)
+              ViewThatFits(in: .horizontal) {
+                // Horizontal layout
+                HStack(spacing: 12) {
+                  Button {
+                    showingActionSheet = true
+                  } label: {
+                    HStack {
+                      Image(systemName: "camera")
+                      Text(String(localized: "photo"))
+                        .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue.opacity(0.1))
+                    .foregroundColor(.blue)
+                    .cornerRadius(8)
                   }
-                  .frame(maxWidth: .infinity)
-                  .padding()
-                  .background(Color.blue.opacity(0.1))
-                  .foregroundColor(.blue)
-                  .cornerRadius(8)
+                  .confirmationDialog(String(localized: "photo_selection"), isPresented: $showingActionSheet) {
+                    Button(String(localized: "camera")) {
+                      showingCameraPicker = true
+                    }
+                    Button(String(localized: "photo_library")) {
+                      showingImagePicker = true
+                    }
+                  }
+
+                  Button {
+                    showingDocumentPicker = true
+                  } label: {
+                    HStack {
+                      Image(systemName: "doc")
+                      Text("PDF")
+                        .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.green.opacity(0.1))
+                    .foregroundColor(.green)
+                    .cornerRadius(8)
+                  }
+
+                  Button {
+                    if viewModel.attachments.contains(where: { $0.type == .audio }) {
+                      showAudioLimitAlert = true
+                    } else {
+                      showingAudioPicker = true
+                    }
+                  } label: {
+                    HStack {
+                      Image(systemName: "waveform")
+                      Text("Audio")
+                        .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background {
+                      RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.purple.opacity(0.1))
+                    }
+                    .foregroundStyle(.purple)
+                  }
                 }
-                .confirmationDialog(String(localized: "photo_selection"), isPresented: $showingActionSheet) {
-                  Button(String(localized: "camera")) {
-                    showingCameraPicker = true
+
+                // Vertical fallback
+                VStack(spacing: 12) {
+                  Button {
+                    showingActionSheet = true
+                  } label: {
+                    HStack {
+                      Image(systemName: "camera")
+                      Text(String(localized: "photo"))
+                        .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue.opacity(0.1))
+                    .foregroundColor(.blue)
+                    .cornerRadius(8)
                   }
-                  Button(String(localized: "photo_library")) {
-                    showingImagePicker = true
+                  .confirmationDialog(String(localized: "photo_selection"), isPresented: $showingActionSheet) {
+                    Button(String(localized: "camera")) {
+                      showingCameraPicker = true
+                    }
+                    Button(String(localized: "photo_library")) {
+                      showingImagePicker = true
+                    }
                   }
-                }
-                
-                Button {
-                  showingDocumentPicker = true
-                } label: {
-                  HStack {
-                    Image(systemName: "doc")
-                    Text("PDF")
-                      .minimumScaleFactor(0.8)
+
+                  Button {
+                    showingDocumentPicker = true
+                  } label: {
+                    HStack {
+                      Image(systemName: "doc")
+                      Text("PDF")
+                        .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.green.opacity(0.1))
+                    .foregroundColor(.green)
+                    .cornerRadius(8)
                   }
-                  .frame(maxWidth: .infinity)
-                  .padding()
-                  .background(Color.green.opacity(0.1))
-                  .foregroundColor(.green)
-                  .cornerRadius(8)
+
+                  Button {
+                    if viewModel.attachments.contains(where: { $0.type == .audio }) {
+                      showAudioLimitAlert = true
+                    } else {
+                      showingAudioPicker = true
+                    }
+                  } label: {
+                    HStack {
+                      Image(systemName: "waveform")
+                      Text("Audio")
+                        .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background {
+                      RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.purple.opacity(0.1))
+                    }
+                    .foregroundStyle(.purple)
+                  }
                 }
               }
             }
@@ -208,7 +297,7 @@ struct StudyRecordEditView: View {
         }
       }
       .sheet(isPresented: $showingDocumentPicker) {
-        DocumentPicker { urls in
+        DocumentPicker(onDocumentsPicked: { urls in
           for url in urls {
             let attachment = AttachmentItem(
               type: .pdf,
@@ -217,7 +306,19 @@ struct StudyRecordEditView: View {
             )
             viewModel.addAttachment(attachment)
           }
-        }
+        }, contentTypes: [.pdf], allowsMultipleSelection: true)
+      }
+      .sheet(isPresented: $showingAudioPicker) {
+        DocumentPicker(onDocumentsPicked: { urls in
+          if let url = urls.first {
+            let attachment = AttachmentItem(
+              type: .audio,
+              url: url,
+              name: url.lastPathComponent
+            )
+            viewModel.addAttachment(attachment)
+          }
+        }, contentTypes: [.audio], allowsMultipleSelection: false)
       }
       .fullScreenCover(isPresented: $showingScannerSheet) {
         DocumentScannerView(
@@ -256,6 +357,14 @@ struct StudyRecordEditView: View {
           Text(errorMessage)
         }
       }
+      .alert(
+        "Only one audio file per entry",
+        isPresented: $showAudioLimitAlert
+      ) {
+        Button("Okay") { showAudioLimitAlert = false }
+      } message: {
+        Text("You can add one audio recording to each learning record. Remove the current audio to add a new one.")
+      }
       .onAppear {
         AnalyticsClient.shared.track(event: .viewEditStudyRecord)
       }
@@ -287,7 +396,7 @@ struct StudyRecordEditView: View {
       .background(
         viewModel.isValidInput ? Color.accentColor : Color.gray
       )
-      .foregroundColor(.white)
+      .foregroundStyle(.white)
       .cornerRadius(12)
       .disabled(!viewModel.isValidInput || viewModel.isLoading)
     }

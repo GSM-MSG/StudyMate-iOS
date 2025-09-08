@@ -281,8 +281,11 @@ struct AttachmentsCard: View {
   }
 }
 
+import AVFoundation
+
 struct AttachmentDisplayView: View {
   let attachment: AttachmentModel
+  @State private var showAudioPlayer = false
   
   var body: some View {
     VStack(spacing: 8) {
@@ -312,6 +315,25 @@ struct AttachmentDisplayView: View {
         .font(.caption)
         .lineLimit(1)
         .foregroundColor(.secondary)
+
+      if attachment.type == .audio, let url = URL(string: attachment.url) {
+        Button {
+          showAudioPlayer = true
+        } label: {
+          Label("Play", systemImage: "play.circle")
+            .font(.caption)
+        }
+        .buttonStyle(.borderless)
+        .sheet(isPresented: $showAudioPlayer) {
+          VStack(spacing: 12) {
+            Text(URL(string: attachment.url)?.lastPathComponent ?? "Audio")
+              .font(.headline)
+            AudioPlayerView(url: url)
+            Button(String(localized: "close")) { showAudioPlayer = false }
+          }
+          .padding()
+        }
+      }
     }
   }
   
@@ -322,6 +344,8 @@ struct AttachmentDisplayView: View {
     switch pathExtension {
     case "pdf":
       return "doc.richtext"
+    case "m4a", "mp3", "wav", "aac", "aiff", "caf":
+      return "waveform"
     case "txt":
       return "doc.text"
     case "doc", "docx":

@@ -1,12 +1,15 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct DocumentPicker: UIViewControllerRepresentable {
   let onDocumentsPicked: ([URL]) -> Void
+  var contentTypes: [UTType] = [.pdf]
+  var allowsMultipleSelection: Bool = true
   
   func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-    let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.pdf], asCopy: true)
+    let picker = UIDocumentPickerViewController(forOpeningContentTypes: contentTypes, asCopy: true)
     picker.delegate = context.coordinator
-    picker.allowsMultipleSelection = true
+    picker.allowsMultipleSelection = allowsMultipleSelection
     return picker
   }
   

@@ -35,6 +35,7 @@ public struct AttachmentDTO: Identifiable, Hashable, Sendable {
   public enum AttachmentType: String, CaseIterable, Sendable {
     case image = "image"
     case pdf = "pdf"
+    case audio = "audio"
   }
   
   public init(id: String, type: AttachmentType, url: String, createdTime: Date) {
