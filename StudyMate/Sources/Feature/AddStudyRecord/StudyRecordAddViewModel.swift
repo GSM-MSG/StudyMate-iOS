@@ -51,6 +51,7 @@ final class StudyRecordAddViewModel {
     errorMessage = nil
     
     do {
+      var seenAudio = false
       let attachmentInputs = attachments.compactMap { attachment -> AttachmentCreateInput? in
         let url: String?
         
@@ -64,7 +65,17 @@ final class StudyRecordAddViewModel {
         
         guard let finalURL = url else { return nil }
         
-        let type: AttachmentModel.AttachmentType = attachment.type == .image ? .image : .document
+        let type: AttachmentModel.AttachmentType = {
+          switch attachment.type {
+          case .image: return .image
+          case .pdf: return .document
+          case .audio: return .audio
+          }
+        }()
+        if type == .audio {
+          if seenAudio { return nil }
+          seenAudio = true
+        }
         return AttachmentCreateInput(type: type, url: finalURL)
       }
       
@@ -83,7 +94,8 @@ final class StudyRecordAddViewModel {
           contentLength: .init(length: content.count),
           studyMinutes: Int(studyDuration / 60.0),
           photoCount: attachments.filter { $0.type == .image }.count,
-          pdfCount: attachments.filter { $0.type == .pdf }.count
+          pdfCount: attachments.filter { $0.type == .pdf }.count,
+          audioCount: attachments.filter { $0.type == .audio }.count
         )
       )
       
@@ -100,7 +112,17 @@ final class StudyRecordAddViewModel {
   }
   
   func addAttachment(_ attachment: AttachmentItem) {
-    attachments.append(attachment)
+    if let originalURL = attachment.url, let tempURL = copyToTemporaryIfNeeded(originalURL) {
+      let updated = AttachmentItem(
+        type: attachment.type,
+        image: attachment.image,
+        url: tempURL,
+        name: attachment.name
+      )
+      attachments.append(updated)
+    } else {
+      attachments.append(attachment)
+    }
   }
   
   func removeAttachment(_ attachment: AttachmentItem) {
@@ -127,6 +149,40 @@ final class StudyRecordAddViewModel {
     studyDuration = 30 * 60 // 30분으로 리셋
     attachments = []
   }
+  private func copyToTemporaryIfNeeded(_ url: URL) -> URL? {
+    let fileManager = FileManager.default
+    let tempDir = fileManager.temporaryDirectory.appendingPathComponent("StudyMateTemp", isDirectory: true)
+
+    do {
+      try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
+    } catch {
+      print("Failed to create temp dir: \(error)")
+      return nil
+    }
+
+    let ext = url.pathExtension
+    let fileName = ext.isEmpty ? UUID().uuidString : "\(UUID().uuidString).\(ext)"
+    let destURL = tempDir.appendingPathComponent(fileName)
+    
+    var didStartAccessing = false
+    if url.startAccessingSecurityScopedResource() {
+      didStartAccessing = true
+    }
+    defer {
+      if didStartAccessing { url.stopAccessingSecurityScopedResource() }
+    }
+
+    do {
+      if fileManager.fileExists(atPath: destURL.path) {
+        try fileManager.removeItem(at: destURL)
+      }
+      try fileManager.copyItem(at: url, to: destURL)
+      return destURL
+    } catch {
+      print("Failed to copy to temp: \(error)")
+      return nil
+    }
+  }
 }
 
 // MARK: - AttachmentItem
@@ -141,6 +197,7 @@ struct AttachmentItem: Identifiable, Sendable {
   enum AttachmentType: Sendable {
     case image
     case pdf
+    case audio
   }
   
   init(type: AttachmentType, image: UIImage? = nil, url: URL? = nil, name: String) {
@@ -173,13 +230,27 @@ private extension UIImage {
 
 private extension URL {
   func saveToDocuments() -> String? {
-    guard let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
-    
+    guard let documentsDirectory = FileManager.default.urls(
+      for: .documentDirectory,
+      in: .userDomainMask
+    ).first else {
+      return nil
+    }
+    let fileManager = FileManager.default
+    let attachmentsDir = documentsDirectory
+      .appending(path: "attachments", directoryHint: .isDirectory)
+    do {
+      try fileManager.createDirectory(at: attachmentsDir, withIntermediateDirectories: true)
+    } catch {
+      print("Failed to create attachments dir: \(error)")
+      return nil
+    }
+
     let fileName = "\(UUID().uuidString).\(self.pathExtension)"
-    let destinationURL = documentsDirectory.appendingPathComponent(fileName)
+    let destinationURL = attachmentsDir.appendingPathComponent(fileName)
     
     do {
-      try FileManager.default.copyItem(at: self, to: destinationURL)
+      try fileManager.copyItem(at: self, to: destinationURL)
       return destinationURL.absoluteString
     } catch {
       print("Failed to save file: \(error)")

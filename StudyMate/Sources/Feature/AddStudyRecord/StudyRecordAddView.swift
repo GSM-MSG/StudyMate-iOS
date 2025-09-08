@@ -22,12 +22,14 @@ struct StudyRecordAddView: View {
   @State private var showingImagePicker = false
   @State private var showingCameraPicker = false
   @State private var showingDocumentPicker = false
+  @State private var showingAudioPicker = false
   @State private var showingActionSheet = false
   @State private var showingScannerSheet = false
   @State private var selectedPhoto: PhotosPickerItem?
   @FocusState private var focusedField: FocusField?
 
   @State private var onAppeared = false
+  @State private var showAudioLimitAlert = false
 
   let onSave: (StudyRecordModel) -> Void
 
@@ -92,6 +94,7 @@ struct StudyRecordAddView: View {
 
               TimePicker(duration: $viewModel.studyDuration)
             }
+            .frame(maxWidth: .infinity)
             .padding()
             .background {
               RoundedRectangle(cornerRadius: 8)
@@ -127,47 +130,137 @@ struct StudyRecordAddView: View {
             Text(String(localized: "add_attachments"))
               .font(.headline)
               .fontWeight(.semibold)
+            ViewThatFits(in: .horizontal) {
+              // Horizontal layout
+              HStack(spacing: 12) {
+                Button {
+                  showingActionSheet = true
+                } label: {
+                  HStack {
+                    Image(systemName: "camera")
+                    Text(String(localized: "photo"))
+                      .minimumScaleFactor(0.8)
+                  }
+                  .frame(maxWidth: .infinity)
+                  .padding()
+                  .background(Color.blue.opacity(0.1))
+                  .foregroundColor(.blue)
+                  .cornerRadius(8)
+                }
+                .confirmationDialog(
+                  String(localized: "photo_selection"),
+                  isPresented: $showingActionSheet
+                ) {
+                  Button(String(localized: "camera")) {
+                    showingCameraPicker = true
+                  }
+                  Button(String(localized: "photo_library")) {
+                    showingImagePicker = true
+                  }
+                }
 
-            HStack(spacing: 12) {
-              Button {
-                showingActionSheet = true
-              } label: {
-                HStack {
-                  Image(systemName: "camera")
-                  Text(String(localized: "photo"))
-                    .minimumScaleFactor(0.8)
+                Button {
+                  showingDocumentPicker = true
+                } label: {
+                  HStack {
+                    Image(systemName: "doc")
+                    Text("PDF")
+                      .minimumScaleFactor(0.8)
+                  }
+                  .frame(maxWidth: .infinity)
+                  .padding()
+                  .background(Color.green.opacity(0.1))
+                  .foregroundColor(.green)
+                  .cornerRadius(8)
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue.opacity(0.1))
-                .foregroundColor(.blue)
-                .cornerRadius(8)
-              }
-              .confirmationDialog(
-                String(localized: "photo_selection"),
-                isPresented: $showingActionSheet
-              ) {
-                Button(String(localized: "camera")) {
-                  showingCameraPicker = true
-                }
-                Button(String(localized: "photo_library")) {
-                  showingImagePicker = true
+
+                Button {
+                  if viewModel.attachments.contains(where: { $0.type == .audio }) {
+                    showAudioLimitAlert = true
+                  } else {
+                    showingAudioPicker = true
+                  }
+                } label: {
+                  HStack {
+                    Image(systemName: "waveform")
+
+                    Text("Audio")
+                      .minimumScaleFactor(0.8)
+                  }
+                  .frame(maxWidth: .infinity)
+                  .padding()
+                  .background {
+                    RoundedRectangle(cornerRadius: 8)
+                      .fill(Color.purple.opacity(0.1))
+                  }
+                  .foregroundStyle(.purple)
                 }
               }
 
-              Button {
-                showingDocumentPicker = true
-              } label: {
-                HStack {
-                  Image(systemName: "doc")
-                  Text("PDF")
-                    .minimumScaleFactor(0.8)
+              // Vertical fallback
+              VStack(spacing: 12) {
+                Button {
+                  showingActionSheet = true
+                } label: {
+                  HStack {
+                    Image(systemName: "camera")
+                    Text(String(localized: "photo"))
+                      .minimumScaleFactor(0.8)
+                  }
+                  .frame(maxWidth: .infinity)
+                  .padding()
+                  .background(Color.blue.opacity(0.1))
+                  .foregroundColor(.blue)
+                  .cornerRadius(8)
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.green.opacity(0.1))
-                .foregroundColor(.green)
-                .cornerRadius(8)
+                .confirmationDialog(
+                  String(localized: "photo_selection"),
+                  isPresented: $showingActionSheet
+                ) {
+                  Button(String(localized: "camera")) {
+                    showingCameraPicker = true
+                  }
+                  Button(String(localized: "photo_library")) {
+                    showingImagePicker = true
+                  }
+                }
+
+                Button {
+                  showingDocumentPicker = true
+                } label: {
+                  HStack {
+                    Image(systemName: "doc")
+                    Text("PDF")
+                      .minimumScaleFactor(0.8)
+                  }
+                  .frame(maxWidth: .infinity)
+                  .padding()
+                  .background(Color.green.opacity(0.1))
+                  .foregroundColor(.green)
+                  .cornerRadius(8)
+                }
+
+                Button {
+                  if viewModel.attachments.contains(where: { $0.type == .audio }) {
+                    showAudioLimitAlert = true
+                  } else {
+                    showingAudioPicker = true
+                  }
+                } label: {
+                  HStack {
+                    Image(systemName: "waveform")
+
+                    Text("Audio")
+                      .minimumScaleFactor(0.8)
+                  }
+                  .frame(maxWidth: .infinity)
+                  .padding()
+                  .background {
+                    RoundedRectangle(cornerRadius: 8)
+                      .fill(Color.purple.opacity(0.1))
+                  }
+                  .foregroundStyle(.purple)
+                }
               }
             }
           }
@@ -218,7 +311,7 @@ struct StudyRecordAddView: View {
       }
     }
     .sheet(isPresented: $showingDocumentPicker) {
-      DocumentPicker { urls in
+      DocumentPicker(onDocumentsPicked: { urls in
         for url in urls {
           let attachment = AttachmentItem(
             type: .pdf,
@@ -227,7 +320,20 @@ struct StudyRecordAddView: View {
           )
           viewModel.addAttachment(attachment)
         }
-      }
+      }, contentTypes: [.pdf], allowsMultipleSelection: true)
+      .ignoresSafeArea()
+    }
+    .sheet(isPresented: $showingAudioPicker) {
+      DocumentPicker(onDocumentsPicked: { urls in
+        if let url = urls.first {
+          let attachment = AttachmentItem(
+            type: .audio,
+            url: url,
+            name: url.lastPathComponent
+          )
+          viewModel.addAttachment(attachment)
+        }
+      }, contentTypes: [.audio], allowsMultipleSelection: false)
       .ignoresSafeArea()
     }
     .fullScreenCover(isPresented: $showingScannerSheet) {
@@ -239,6 +345,14 @@ struct StudyRecordAddView: View {
           showingScannerSheet = false
         }
       )
+    }
+    .alert(
+      "Only one audio file per entry",
+      isPresented: $showAudioLimitAlert
+    ) {
+      Button("Okay") { showAudioLimitAlert = false }
+    } message: {
+      Text("You can add one audio recording to each learning record. Remove the current audio to add a new one.")
     }
     .onChange(of: selectedPhoto) { _, newPhoto in
       if let newPhoto = newPhoto {
@@ -296,7 +410,10 @@ struct StudyRecordAddView: View {
             .padding()
         }
       }
-      //      .glassEffect(.regular.tint(viewModel.isValidInput ? Color.accentColor : Color.gray).interactive())
+      .background(
+        RoundedRectangle(cornerRadius: 12)
+          .fill(viewModel.isValidInput ? Color.accentColor : Color.gray)
+      )
       .disabled(!viewModel.isValidInput || viewModel.isLoading)
       .padding(.horizontal, 20)
       .padding(.bottom, 34)
@@ -356,12 +473,19 @@ struct AttachmentRowView: View {
             .background(Color.gray.opacity(0.2))
             .cornerRadius(8)
         }
-      } else {
+      } else if attachment.type == .pdf {
         Image(systemName: "doc")
           .font(.title2)
           .foregroundColor(.blue)
           .frame(width: 50, height: 50)
           .background(Color.blue.opacity(0.1))
+          .cornerRadius(8)
+      } else {
+        Image(systemName: "waveform")
+          .font(.title2)
+          .foregroundColor(.purple)
+          .frame(width: 50, height: 50)
+          .background(Color.purple.opacity(0.1))
           .cornerRadius(8)
       }
 
@@ -373,10 +497,16 @@ struct AttachmentRowView: View {
 
         Text(
           attachment.type == .image
-            ? String(localized: "image") : String(localized: "document")
+            ? String(localized: "image")
+            : (attachment.type == .pdf ? String(localized: "document") : "Audio")
         )
         .font(.caption)
         .foregroundColor(.secondary)
+
+        if attachment.type == .audio, let url = attachment.url {
+          AudioPlayerView(url: url)
+            .padding(.top, 4)
+        }
       }
 
       Spacer()

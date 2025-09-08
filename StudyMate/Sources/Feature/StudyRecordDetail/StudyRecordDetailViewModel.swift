@@ -67,9 +67,16 @@ final class StudyRecordDetailViewModel {
           createdTime: currentRecord.createdTime,
           updatedTime: currentRecord.updatedTime,
           attachments: currentRecord.attachments.map { attachment in
-            AIService.AttachmentDTO(
+            let dtoType: AIService.AttachmentDTO.AttachmentType = {
+              switch attachment.type {
+              case .image: return .image
+              case .document: return .pdf
+              case .audio: return .audio
+              }
+            }()
+            return AIService.AttachmentDTO(
               id: attachment.id,
-              type: AIService.AttachmentDTO.AttachmentType(rawValue: attachment.type.rawValue) ?? .pdf,
+              type: dtoType,
               url: attachment.url,
               createdTime: attachment.createdTime
             )
