@@ -123,28 +123,33 @@ struct StudyRecordListView: View {
                   .foregroundColor(.white)
                   .frame(width: 56, height: 56)
                   .matchedTransitionSource(id: "add-record", in: addNamespace)
+                  .background {
+                    Circle()
+                      .fill(Color.primary)
+                      .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+                  }
 //                  .glassEffect(.regular.tint(Color.accentColor).interactive(), in: Circle())
               } else if #available(iOS 18.0, *) {
                 Image(systemName: "plus")
                   .font(.title2)
                   .fontWeight(.semibold)
-                  .foregroundColor(.white)
+                  .foregroundStyle(.white)
                   .frame(width: 56, height: 56)
                   .matchedTransitionSource(id: "add-record", in: addNamespace)
                   .background {
                     Circle()
-                      .fill(Color.accentColor)
+                      .fill(Color.primary)
                       .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
                   }
               } else {
                 Image(systemName: "plus")
                   .font(.title2)
                   .fontWeight(.semibold)
-                  .foregroundColor(.white)
+                  .foregroundStyle(.white)
                   .frame(width: 56, height: 56)
                   .background {
                     Circle()
-                      .fill(Color.accentColor)
+                      .fill(Color.primary)
                       .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
                   }
               }
@@ -159,6 +164,7 @@ struct StudyRecordListView: View {
           viewModel.addStudyRecord(newRecord)
         }
         .navigationTransition(ZoomNavigationTransition.zoom(sourceID: "add-record", in: addNamespace))
+        .toolbarVisibility(.hidden, for: .tabBar)
       }
       .navigationDestination(item: $selectedRecord) { record in
         StudyRecordDetailView(

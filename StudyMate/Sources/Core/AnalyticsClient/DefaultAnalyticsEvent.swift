@@ -15,8 +15,8 @@ enum DefaultAnalyticsEvent: AnalyticsEventType {
   case viewEditStudyRecord
   case tapAddStudyRecord
   case viewStudyRecordDetail(entry: ViewStudyRecordDetailEntry)
-  case saveStudyRecord(title: String, contentLength: StudyRecordContentLength, studyMinutes: Int, photoCount: Int, pdfCount: Int)
-  case editStudyRecord(title: String, contentLength: StudyRecordContentLength, studyMinutes: Int, photoCount: Int, pdfCount: Int)
+  case saveStudyRecord(title: String, contentLength: StudyRecordContentLength, studyMinutes: Int, photoCount: Int, pdfCount: Int, audioCount: Int)
+  case editStudyRecord(title: String, contentLength: StudyRecordContentLength, studyMinutes: Int, photoCount: Int, pdfCount: Int, audioCount: Int)
   case deleteStudyRecord
   case openStudyRecordContent
   case openStudyRecordAiTutor
@@ -40,14 +40,15 @@ enum DefaultAnalyticsEvent: AnalyticsEventType {
 
   var properties: [String: Any]? {
     switch self {
-    case let .saveStudyRecord(title, contentLength, studyMinutes, photoCount, pdfCount),
-      let .editStudyRecord(title, contentLength, studyMinutes, photoCount, pdfCount):
+    case let .saveStudyRecord(title, contentLength, studyMinutes, photoCount, pdfCount, audioCount),
+      let .editStudyRecord(title, contentLength, studyMinutes, photoCount, pdfCount, audioCount):
       return [
         "title": title,
         "content_length": contentLength.analyticsValue,
         "study_minutes": studyMinutes,
         "photo_count": photoCount,
-        "pdf_count": pdfCount
+        "pdf_count": pdfCount,
+        "audio_count": audioCount
       ]
 
     case let .viewStudyRecordDetail(entry):

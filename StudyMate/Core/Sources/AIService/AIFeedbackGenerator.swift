@@ -41,19 +41,39 @@ public struct AIFeedbackGenerator: Sendable {
     let prompt = createPrompt(for: studyRecord, userLanguage: userLanguage)
     
     let contentModels: [ModelContent] = studyRecord.attachments.compactMap { attachment -> ModelContent? in
+      func resolveFileURL(from string: String) -> URL? {
+        if let url = URL(string: string), url.isFileURL {
+          return url
+        }
+        return URL(filePath: string)
+      }
+
       switch attachment.type {
       case .image:
-        guard
-          let image = UIImage(contentsOfFile: attachment.url)
+        guard let url = resolveFileURL(from: attachment.url),
+              let image = UIImage(contentsOfFile: url.path)
         else { return nil }
         return ModelContent(parts: image.partsValue)
 
       case .pdf:
-        let url = URL(filePath: attachment.url)
+        guard let url = resolveFileURL(from: attachment.url) else { return nil }
         
         url.startAccessingSecurityScopedResource()
         do {
           let content = try ModelContent(parts: InlineDataPart(data: Data(contentsOf: url), mimeType: "application/pdf"))
+          url.stopAccessingSecurityScopedResource()
+          return content
+        } catch {
+          url.stopAccessingSecurityScopedResource()
+          return nil
+        }
+      case .audio:
+        guard let url = resolveFileURL(from: attachment.url) else { return nil }
+        url.startAccessingSecurityScopedResource()
+        do {
+          let data = try Data(contentsOf: url)
+          let mime = mimeType(forAudioExtension: url.pathExtension.lowercased())
+          let content = ModelContent(parts: InlineDataPart(data: data, mimeType: mime))
           url.stopAccessingSecurityScopedResource()
           return content
         } catch {
@@ -89,12 +109,15 @@ public struct AIFeedbackGenerator: Sendable {
   }
   
   private func createPrompt(for record: StudyRecordDTO, userLanguage: String) -> String {
+    let hasAudio = record.attachments.contains { $0.type == .audio }
+    let audioNote = hasAudio ? "\nIf audio content is provided, first transcribe it and incorporate the transcript into your analysis.\n" : ""
     return """
     You are an AI tutor analyzing a student's study record. Please provide comprehensive feedback in \(userLanguage) language.
     
     Study Record:
     Title: \(record.title)
     Content: \(record.content)
+    \(audioNote)
     
     Please analyze this study record and provide feedback in the following areas (but feel free to add other relevant feedback categories):
     - Summary of what was learned
@@ -146,6 +169,25 @@ public struct AIFeedbackGenerator: Sendable {
     default:
       return .underlying(error)
     }
+  }
+}
+
+private func mimeType(forAudioExtension ext: String) -> String {
+  switch ext {
+  case "mp3": return "audio/mp3"
+  case "m4a": return "audio/m4a"
+  case "aac": return "audio/aac"
+  case "wav": return "audio/wav"
+  case "aiff", "aif": return "audio/aiff"
+  case "mpeg": return "audio/mpeg"
+  case "flac": return "audio/flac"
+  case "mpa": return "audio/m4a"
+  case "mpga": return "audio/mpga"
+  case "mp4": return "audio/mp4"
+  case "pcm": return "audio/pcm"
+  case "opus": return "audio/opus"
+  case "webm": return "audio/webm"
+  default: return "audio/mpeg"
   }
 }
 
